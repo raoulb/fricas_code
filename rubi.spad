@@ -1,0 +1,147 @@
+<<package RUBI RUBIIntegration>>=
+)abbrev package RUBI RUBIIntegration
+++ Author: Raoul Bourquin
+++ Date Created: 7 September 2012
+++ Date Last Updated: 7 September 2012
+++ Description:
+++ \spadtype{RUBIIntegration} provides functions that use
+++ the pattern matcher to find some indefinite and definite integrals
+++ possibly involving special functions.
+++
+++ It is similar in nature to the RUBI 3:
+++ http://www.apmaths.uwo.ca/~arich/
+RUBIIntegration(R, F) : Exports == Implementation where
+
+  R : Join(Comparable, RetractableTo Integer, GcdDomain,
+           LinearlyExplicitRingOver Integer)
+
+  F : Join(AlgebraicallyClosedField, TranscendentalFunctionCategory,
+           FunctionSpace R)
+
+  FE ==> Expression Integer
+  S ==> Symbol
+  RES ==> Union(F, "failed")
+
+  N   ==> NonNegativeInteger
+  Z   ==> Integer
+
+  PAT ==> Pattern Z
+  PMR ==> PatternMatchResult(Z, F)
+
+  -- Example of a rule: x^n -> x^(n+1)/(n+1) | n != -1
+  --RULE ==> Record(syms:List S, pattern:PAT, result:F)--, result:PMR+->F)
+  RULE ==> Record(pattern:PAT, result:F)
+  -- Consider:
+  --  Maybe just store the two expressions and not the PAT form?
+  --  How to store the "given that" restrictions?
+
+  -- Where to store the tables containing different rules?
+
+  Exports ==> with
+    if R has ConvertibleTo Pattern Integer and
+       R has PatternMatchable Integer then
+         if F has LiouvillianFunctionCategory then
+
+           matches? : (F, RULE) -> Boolean
+             ++ Test if the given rule matches the expression
+
+	   matchRule : (F, RULE) -> PMR
+             ++ Apply a given rule to an expression and
+             ++ return the matche result
+
+	   applyRule : (F, RULE) -> RES
+             ++ Apply a transformation rule to the given expression
+
+
+           buildRule : () -> RULE
+             ++ Build an arbitrary rule for test
+
+           buildRule2 : () -> RULE
+             ++ Build another arbitrary rule for test
+
+           buildRule3 : () -> RULE
+             ++ Build another arbitrary rule for test
+
+
+           --findRule : (F, List RULE) -> RULE
+             -- Find a suitable rule in a collection of rules
+
+  Implementation ==> add
+
+      import PatternMatch(Z, F, F)
+      import FunctionSpaceAttachPredicates(R, F, F)
+
+      if R has ConvertibleTo Pattern Integer and
+         R has PatternMatchable Integer then
+           if F has LiouvillianFunctionCategory then
+
+             --findRule(f, x) ==
+             --  for rule in rules
+             --    test it
+
+
+	     applyRule(f, rule) ==
+               -- Can we really use the given rule?
+               not matches?(f, rule) => "failed"
+
+               -- Match the rule to the given expression
+               res : PMR := matchRule(f, rule)
+               matches := destruct res
+
+               -- Substitute matched parameter values
+               solution := rule.result
+
+	       for match in matches repeat
+                 solution := subst(solution, match.key::F=match.entry::F)
+
+               solution
+
+
+             matches?(f, rule) ==
+               pat := rule.pattern
+	       pmr := new()$PMR
+	       res := patternMatch(f, pat, pmr)
+               not failed?(res)
+
+
+             matchRule(f, rule) ==
+               pat := rule.pattern
+	       pmr := new()$PMR
+	       --pmr
+	       res := patternMatch(f, pat, pmr)
+	       res
+
+
+             -- Some rules
+
+             buildRule() ==
+               pm := new()$S
+	       pma := new pm
+	       pmn := new pm
+	       a := pma::F
+	       n := pmn::F
+               pat := convert(a^n)@PAT
+               rule : RULE := [pat, a^(n+1::F)/(n+1::F)]
+
+             buildRule2() ==
+               pm := new()$S
+	       pma := new pm
+	       pmx := new pm
+	       a := pma::F
+	       x := pmx::F
+               pat := convert(sin(a*x))@PAT
+               rule : RULE := [pat, -cos(a*x)/a]
+
+             buildRule3() ==
+               pm := new()$S
+	       pma := new pm
+	       pmb := new pm
+	       pmc := new pm
+	       pmx := new pm
+	       a := pma::F
+	       b := pmb::F
+	       c := pmc::F
+	       x := pmx::F
+               pat := convert(exp(-a*x^2+b*x+c))@PAT
+               res := sqrt(pi)*exp(b^2/(4*a)+c)/(2*sqrt(a))*erf((2*a*x-b)/(2*sqrt(a)))
+               rule : RULE := [pat, res]

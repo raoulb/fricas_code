@@ -4,3 +4,13 @@ r1 := newRule( a^n, a^(n+1)/(n+1) )
 r2 := newRule( sin(a*x), -cos(a*x)/a )
 
 r3 := newRule( exp(-a*x^2+b*x+c), sqrt(pi)*exp(b^2/(4*a)+c)/(2*sqrt(a))*erf((2*a*x-b)/(2*sqrt(a))) )
+
+
+-- Create a rule set
+rs := newRuleSet()
+
+rs := addRule(r1, rs)
+rs := addRule(r2, rs)
+rs := addRule(r2, rs)
+
+rs

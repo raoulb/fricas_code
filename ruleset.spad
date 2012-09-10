@@ -1,0 +1,53 @@
+<<domain INTRSET IntegrationRuleSet>>=
+)abbrev domain INTRSET IntegrationRuleSet
+++ Author: Raoul Bourquin
+++ Date Created: 10 September 2012
+++ Date Last Updated: 10 September 2012
+++ Description:
+++ Data type for representing sets of integration rules.
+++ Purpose is to make representation of collections of rules
+++ independent from underlying data structure (currently List).
+IntegrationRuleSet: Exports == Implementation where
+
+  IR ==> IntegrationRule
+
+
+  Exports == with
+
+    newRuleSet : () -> %
+      ++ Construct a new rule set
+
+    addRule: (IR, %) -> %
+      ++ Add a new rule to the current set
+
+    coerce: % -> List IR
+
+    coerce: % -> OutputForm
+      ++ Print the rules as a table
+
+    -- TODO: Allow iteration over rule set
+
+
+  Implementation == add
+
+    Rep := List IR
+
+    -- Store the rules here
+    --rules := []::Rep
+
+
+    newRuleSet() ==
+      []::Rep
+
+
+    addRule(r, set) ==
+      --rules := cons(r, rules)
+      cons(r, set)
+
+
+    coerce(rs:%): List IR ==
+      rs pretend List IR
+
+    coerce(rs:%): OutputForm ==
+      -- How to print a table of rules?
+      (#rs)::OutputForm

@@ -30,7 +30,8 @@ RUBIIntegration(R, F) : Exports == Implementation where
 
   -- Example of a rule: x^n -> x^(n+1)/(n+1) | n != -1
   --RULE ==> Record(syms:List S, pattern:PAT, result:F)--, result:PMR+->F)
-  RULE ==> Record(pattern:PAT, result:F)
+  --RULE ==> Record(pattern:PAT, result:F)
+  RULE ==> IntegrationRule
   -- Consider:
   --  Maybe just store the two expressions and not the PAT form?
   --  How to store the "given that" restrictions?
@@ -53,14 +54,14 @@ RUBIIntegration(R, F) : Exports == Implementation where
              ++ Apply a transformation rule to the given expression
 
 
-           buildRule : () -> RULE
-             ++ Build an arbitrary rule for test
+           --buildRule : () -> RULE
+           --  ++ Build an arbitrary rule for test
 
-           buildRule2 : () -> RULE
-             ++ Build another arbitrary rule for test
+           --buildRule2 : () -> RULE
+           --  ++ Build another arbitrary rule for test
 
-           buildRule3 : () -> RULE
-             ++ Build another arbitrary rule for test
+           --buildRule3 : () -> RULE
+           --  ++ Build another arbitrary rule for test
 
 
            --findRule : (F, List RULE) -> RULE
@@ -89,23 +90,25 @@ RUBIIntegration(R, F) : Exports == Implementation where
                matches := destruct res
 
                -- Substitute matched parameter values
-               solution := rule.result
+               -- Should change type to F here?
+               --solution := result rule
 
-	       for match in matches repeat
-                 solution := subst(solution, match.key::F=match.entry::F)
+	       --for match in matches repeat
+               --  solution := subst(solution, match.key::F=match.entry::F)
 
-               solution
+               --solution
+               f
 
 
              matches?(f, rule) ==
-               pat := rule.pattern
+               pat := convert(pattern rule)@PAT
 	       pmr := new()$PMR
 	       res := patternMatch(f, pat, pmr)
                not failed?(res)
 
 
              matchRule(f, rule) ==
-               pat := rule.pattern
+               pat := convert(pattern rule)@PAT
 	       pmr := new()$PMR
 	       --pmr
 	       res := patternMatch(f, pat, pmr)
@@ -114,34 +117,34 @@ RUBIIntegration(R, F) : Exports == Implementation where
 
              -- Some rules
 
-             buildRule() ==
-               pm := new()$S
-	       pma := new pm
-	       pmn := new pm
-	       a := pma::F
-	       n := pmn::F
-               pat := convert(a^n)@PAT
-               rule : RULE := [pat, a^(n+1::F)/(n+1::F)]
+             -- buildRule() ==
+             --   pm := new()$S
+	     --   pma := new pm
+	     --   pmn := new pm
+	     --   a := pma::F
+	     --   n := pmn::F
+             --   pat := convert(a^n)@PAT
+             --   rule : RULE := [pat, a^(n+1::F)/(n+1::F)]
 
-             buildRule2() ==
-               pm := new()$S
-	       pma := new pm
-	       pmx := new pm
-	       a := pma::F
-	       x := pmx::F
-               pat := convert(sin(a*x))@PAT
-               rule : RULE := [pat, -cos(a*x)/a]
+             -- buildRule2() ==
+             --   pm := new()$S
+	     --   pma := new pm
+	     --   pmx := new pm
+	     --   a := pma::F
+	     --   x := pmx::F
+             --   pat := convert(sin(a*x))@PAT
+             --   rule : RULE := [pat, -cos(a*x)/a]
 
-             buildRule3() ==
-               pm := new()$S
-	       pma := new pm
-	       pmb := new pm
-	       pmc := new pm
-	       pmx := new pm
-	       a := pma::F
-	       b := pmb::F
-	       c := pmc::F
-	       x := pmx::F
-               pat := convert(exp(-a*x^2+b*x+c))@PAT
-               res := sqrt(pi)*exp(b^2/(4*a)+c)/(2*sqrt(a))*erf((2*a*x-b)/(2*sqrt(a)))
-               rule : RULE := [pat, res]
+             -- buildRule3() ==
+             --   pm := new()$S
+	     --   pma := new pm
+	     --   pmb := new pm
+	     --   pmc := new pm
+	     --   pmx := new pm
+	     --   a := pma::F
+	     --   b := pmb::F
+	     --   c := pmc::F
+	     --   x := pmx::F
+             --   pat := convert(exp(-a*x^2+b*x+c))@PAT
+             --   res := sqrt(pi)*exp(b^2/(4*a)+c)/(2*sqrt(a))*erf((2*a*x-b)/(2*sqrt(a)))
+             --   rule : RULE := [pat, res]

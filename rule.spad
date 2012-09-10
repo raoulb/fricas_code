@@ -1,0 +1,67 @@
+<<domain INTRULE IntegrationRule>>=
+)abbrev domain INTRULE IntegrationRule
+++ Author: Raoul Bourquin
+++ Date Created: 10 September 2012
+++ Date Last Updated: 10 September 2012
+++ Description:
+++ Data type for integration rules
+IntegrationRule: Exports == Implementation where
+
+  Z ==> Integer
+  --PAT ==> Pattern Z
+  FE ==> Expression Integer
+
+  Exports ==>  with
+
+    --newRule : List FE -> %
+    newRule : (FE, FE) -> %
+      ++ Construct a new rule
+
+    pattern : % -> FE
+      ++ Return the pattern
+
+    result : % -> FE
+      ++ Return the result of the rule
+
+    variables: % -> List Symbol
+      ++ Return the variables present in the pattern
+
+    coerce: % -> OutputForm
+      ++ Print the rule
+
+
+  Implementation ==> add
+
+    Rep := Record(pattern:FE, result:FE)
+    -- Or better
+    -- Rep := List FE
+
+    --coerce: List FE -> %
+    --coerce(l) ==
+    --  [first l, second l]
+
+
+    coerce(r:%): OutputForm ==
+      -- why does this not work?
+      --(pattern r, result r)::OutputForm
+      -- Desired(?) print: "Rule: pattern +-> result | ..."
+      pattern(r)::OutputForm
+
+
+    newRule(pa, re) ==
+      [pa, re]
+      --l :: Rep
+
+
+    pattern(r) ==
+      --first r
+      r.pattern
+
+
+    result(r) ==
+      --second r
+      r.result
+
+
+    variables(r) ==
+      variables r.pattern

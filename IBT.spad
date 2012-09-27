@@ -1,0 +1,12 @@
+)abbrev domain IBT IntegerAsComparable
+IntegerAsComparable : Join(BasicType, Comparable,
+  ConvertibleTo Pattern Integer, PatternMatchable(Integer)) with
+    0 : () -> %
+    1 : () -> %
+    _- : % -> %
+    coerce : Integer -> %
+    coerce : % -> Integer
+ == Integer add 
+
+    coerce(n : Integer) : % == n pretend %
+    coerce(x : %) : Integer == x pretend Integer

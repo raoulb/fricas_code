@@ -1,0 +1,11 @@
+)abbrev category FSPMC FunctionSpacePatternMatchCategory
+FunctionSpacePatternMatchCategory(F : Comparable) : Category == with
+    0 : () -> F
+    1 : () -> F
+    _+ : (F, F) -> F
+    numerator : F -> F
+    denominator : F -> F
+    isPlus : F -> Union(List(F), "failed")
+    isTimes : F -> Union(List(F), "failed")
+    isExpt : F -> Union(Record(var : Kernel(F), exponent : Integer), "failed")
+

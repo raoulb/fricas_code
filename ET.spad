@@ -1,0 +1,149 @@
+)abbrev domain ET ExpressionTree
+ExpressionTree : Join(FunctionSpace(IntegerAsComparable),
+  FunctionSpacePatternMatchCategory(%)) with
+    _+ : (%, %) -> %
+    _- : (%, %) -> %
+    _* : (%, %) -> %
+    _/ : (%, %) -> %
+    _^ : (%, %) -> %
+    _- : % -> %
+    coerce : Integer -> %
+    coerce : Fraction(Integer) -> %
+  == Expression(IntegerAsComparable) add
+    import KernelFunctions2(IntegerAsComparable, %)
+    import BasicOperator
+    opplus := operator('_+)
+    opminus := operator('_-)
+    optimes := operator('_*)
+    opdiv := operator('_/)
+    oppow := operator('_^)
+
+    coerce(n : Integer): % == constantKernel(n::IntegerAsComparable) pretend %
+
+    coerce(q : Fraction(Integer)): % == numer(q)::% / denom(q)::%
+
+    x + y == kernel(opplus, [x, y])
+
+    x - y == kernel(opminus, [x, y])
+
+    (x : %) * (y : %) == kernel(optimes, [x, y])
+
+    x / y == kernel(opdiv, [x, y])
+
+    (x : %) ^ (y : %) == kernel(oppow, [x, y])
+
+    - x == kernel(opminus, x)
+
+    0 == (0$Integer)::%
+
+    1 == (1$Integer)::%
+
+    is__minus(x : %) : Union(%, "failed") ==
+        kers := kernels(x)
+        #kers ~= 1 => "failed"
+        xk := kers.1
+        -- sanity check
+        x ~= xk::% => 
+            error "expression is not a single kernel"
+        name(xk) ~= '_- => "failed"
+        args := argument(xk)
+        #args ~= 1 => "failed"
+        args(1)
+
+    BREC ==> Record(arg1 : %, arg2 : %)
+
+    is__binop(s : Symbol, x : %)
+             : Union(BREC, "failed") ==
+        kers := kernels(x)
+        #kers ~= 1 => "failed"
+        xk := kers.1
+        -- sanity check
+        x ~= xk::% =>
+            error "expression is not a single kernel"
+        name(xk) ~= s => "failed"
+        args := argument(xk)
+        #args ~= 2 => "failed"
+        [args(1), args(2)]
+
+    numerator(x) ==
+        (args := is__binop('_/, x)) case BREC => args.arg1
+        x
+
+    denominator(x) ==
+        (args := is__binop('_/, x)) case BREC => args.arg2
+        1
+
+-- )if false
+
+    recurse__args(f : % -> Union(List(%), "failed"), r : BREC)
+                 : Record(argl1 : List(%), argl2 : List(%)) ==
+        a1 := r.arg1
+        a2 := r.arg2
+        al1 :=
+            (pres1 := f(a1)) case "failed" => [a1]
+            pres1::List(%)
+        al2 :=
+            (pres2 := f(a2)) case "failed" => [a2]
+            pres2::List(%)
+        [al1, al2]
+
+-- )if false
+
+    isPlus(x) ==
+        (args := is__binop('_+, x)) case BREC =>
+            als := recurse__args(isPlus, args)
+            concat(als.argl1, als.argl2)
+        (args := is__binop('_-, x)) case BREC =>
+            als := recurse__args(isPlus, args)
+            concat(als.argl1, map((z : %) : % +-> -z, als.argl2))
+        "failed"
+
+    isTimes(x) ==
+        (xm := is__minus(x)) case % =>
+             x = 1 => "failed"
+             (xm1 := is__minus(xm)) case % => isTimes(xm1)
+             (pres := isTimes(xm)) case "failed" => [-1, x]
+             cons(-1, pres::List(%))
+        (args := is__binop('_*, x)) case "failed" => "failed"
+        als := recurse__args(isTimes, args)
+        concat(als.argl1, als.argl2)
+
+    isExpt(x) == "failed"
+
+)if false
+    is__expt(x) ==
+        (args := is__binop('_^, x)) case "failed" => "failed"
+        kp1 := retractIfCan(args.arg1)@Union(Kernel(%), "failed")
+        kp1 case "failed" =>
+            error "not a single kernel"
+        ep1 := retractIfCan(args.arg2)@Union(IntegerAsComparable, "failed")
+        ep1 case "failed" => "failed"
+        [kp1, ep1::IntegerAsComparable::Integer]
+)endif
+
+    -- patternMatch(z, y, z) == patternMatch(z, y, z)$
+    convert(x : %) : Pattern(Integer) == convert(x pretend Kernel(%))
+-- )endif
+
+    PAT ==> Pattern(Integer)
+    RCP ==> Record(val:PAT, exponent:NonNegativeInteger)
+
+    patternMatch(s : %, p : Pattern(Integer), 
+                 r : PatternMatchResult(Integer, %)) ==
+        (uu := isPower p) case Record(val:PAT, exponent:PAT) =>
+            uur := uu::Record(val:PAT, exponent: PAT)
+            (args := is__binop('_^, s)) case "failed" =>
+                optional?(uur.exponent) =>
+                    failed?(r := addMatch(uur.exponent, 1, r)) => failed()
+                    patternMatch(s, uur.val, r)
+                failed()
+            failed?(r := patternMatch(args.arg2, uur.exponent, r)) => failed()
+            patternMatch(args.arg1, uur.val, r)
+        ((ep := isExpt p) case RCP) =>
+            (args := is__binop('_^, s)) case "failed" => failed()
+            r := patternMatch(args.arg2, ((ep::RCP).exponent)::PAT, r)
+            failed?(r) => failed()
+            patternMatch(args.arg1, (ep::RCP).val, r)
+
+        patternMatch(s, p, r
+           )$PatternMatchFunctionSpace(Integer, IntegerAsComparable, %)

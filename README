@@ -1,0 +1,12 @@
+To kompile do:
+
+)read kompi.input
+
+After compilation you can use:
+
+)read load.input
+
+to load compiled code without recompilation.
+
+Example use in 'tt.input'.  Example of reading Rubi test
+file in 'log-fun3.input'.

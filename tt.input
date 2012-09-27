@@ -1,0 +1,5 @@
+epe := (z+y)::Pattern(Integer)
+ee := (x::ET+3)
+pmET := PatternMatchFunctionSpace(Integer, IntegerAsComparable, ET)
+nmm(s, p) == (pr := new()$PatternMatchResult(Integer, ET); patternMatch(s, p, pr)$pmET)
+nmm(ee, epe)

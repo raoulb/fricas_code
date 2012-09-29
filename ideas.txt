@@ -1,0 +1,166 @@
+Ideas on how the rule based integration could work
+==================================================
+
+Some ideas for porting RUBI to Axiom
+
+
+Definition of rules
+-------------------
+
+An integration rule could be defined as a structure
+
+  rule := { pattern, result }
+
+such that:
+
+  Integral(pattern, x) = result
+
+holds.
+
+Examples of simple rules are:
+
+  r := { x^n,       x^(n+1)/(n+1) }
+  r := { sin(x),    -cos(x) }
+
+or more general
+
+  r := { sin(a*x+b), -cos(a*x+b)/a }
+
+The three rules above correspond to integrals that can
+trivially be done by the Risch code. They serve only as
+examples and the principle carries over to more complex
+cases well beyond the (current) integration code.
+
+Handling of more or less special functions is easily possible:
+
+  r := { exp(-x^2), sqrt(pi)/2*erf(x) }
+  r := { Ai'(x),    Ai(x) }
+
+These two integrals are currently out of range for the
+algorithmic integration code. (Some interesting work was
+done for the first case though)
+
+
+Predicates
+----------
+
+In the examples above we see that the results are sometimes
+only valid under certain conditions. For example here:
+
+  r := { x^n, x^(n+1)/(n+1) }
+
+we have to assure that n is not -1. We need a general way
+to incorporate such conditions on parameters into the
+integration rule. Hence we extend the definition to:
+
+  rule := { pattern, result, predicates }
+
+The third part called 'predicates' is an expression
+that can be evaluated to a boolean value after substitution
+of placeholder values. It is in general build up by boolean
+and, or, not operations from simpler predicates.
+
+  predicates := boolean combinations of one or more single predicate
+  predicate := function: parameters -> Boolean value
+
+A simple predicate for example is:
+
+  p := n ~= -1
+  p := not( n = -1 )
+
+or:
+
+  p := m > n/3
+
+An example of a composite predicate would be:
+
+  p1 := integer? n
+  p2 := even? m
+  p3 := n > 2
+  p4 := m = n/2
+
+  p := p1 and p2 or p3 and p4
+
+written out we find:
+
+  p := n integer and m even or n>2 and m=n/2
+
+There can be "couplings" between all the input parameters
+describing complex relations.
+
+Note that we can not express p1 and p2 this way in Axiom
+right now. (I'm not sure of how much use the following is:
+
+(34) -> 'integer? k
+
+   (34)  'integer?(k)
+                                                    Type: Expression(Integer)
+
+Piecewise expressions
+---------------------
+
+Simplification of rulesets by using piecewise expressions
+is sometimes possible. I suppose this can solve two separate
+issues at once.
+
+Instead of the two rules:
+
+  r1 := {x^n, x^(n+1)/(n+1), n ~= -1}
+  r2 := {x^n, log(x), n == -1}
+
+we could write one single rule:
+
+  r := {x^n,  [x^(n+1)/(n+1) if n ~= -1] }
+       {      [log(x)        if n = -1] }
+
+with a piecewise expression as result and no further predicates
+in the rule. We managed to get the predicates from the rule
+into the resulting expression. The advantage is that we can
+leave the evaluation of this expression to standard machinery
+outside the RUBI code. As a byproduct the number of rules
+will be reduced a bit.
+
+
+Symbolic parameters
+-------------------
+
+Additionally, we have no other choice than doing it this way when
+working with symbolic parameters. If we only know that n is an integer
+but have no information about its value then the best we can
+do is returning an unevaluated piecewise expression.
+
+Note that currently the integration code produces:
+
+(22) -> integrate(x^n,x)
+
+             n log(x)
+         x %e
+   (22)  ------------
+             n + 1
+                                         Type: Union(Expression(Integer),...)
+and we fail with:
+
+(23) -> eval(%, n=-1)
+
+   >> Error detected within library code:
+   catdef: division by zero
+
+approaching more carefully by using limits does not
+give a useful result:
+
+(26) -> limit(%, n=-1)
+
+   (26)  [leftHandLimit= - infinity,rightHandLimit=  + infinity]
+Type: Union(Record(leftHandLimit: Union(OrderedCompletion(Expression(Integer)),"failed"),rightHandLimit: Union(OrderedCompletion(Expression(Integer)),"failed")),...)
+
+
+Handling rules
+--------------
+
+
+Collecting rules in rulesets
+----------------------------
+
+
+Extensions by user
+------------------

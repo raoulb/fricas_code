@@ -2,6 +2,9 @@ Ideas on how the rule based integration could work
 ==================================================
 
 Some ideas for porting RUBI to Axiom
+This is still work in progress. All
+explicit function names are up to
+discussion.
 
 
 Definition of rules
@@ -154,13 +157,71 @@ give a useful result:
 Type: Union(Record(leftHandLimit: Union(OrderedCompletion(Expression(Integer)),"failed"),rightHandLimit: Union(OrderedCompletion(Expression(Integer)),"failed")),...)
 
 
-Handling rules
---------------
-
-
 Collecting rules in rulesets
 ----------------------------
+
+Single rules will be collected into rulesets. The rules therein
+have a well defined order:
+
+  rl := [ rule1, rule2, ... ]
+
+Rulesets allow for inplace(?) insertion and deletion of single rules.
+Also we can concat rulesets to form a new ruleset containing all rules
+of the old sets in the given order:
+
+  rl := rl1 & rl2 & rl3 ...
+
+Rulesets could be printed in a table like form:
+
+  #1  pattern1  result1  conditions1
+  #2  pattern2  result2  conditions2
+  #3  ...
+
+including the reference number at the start of each line. These
+numbers can in used to reference single rules for deletion etc.
+
+These are some features not present in the current Ruleset domain.
 
 
 Extensions by user
 ------------------
+
+Beside the standard ruleset provided out of the box, the architecture
+should allow for user specified rulesets. If an integral can not be solved
+by the standard set, the user may wish to add a new rule. This can be useful
+for new special functions too.
+
+
+Solving integrals
+-----------------
+
+For solving an integral we call:
+
+  rubiIntegrate( f(x), x)
+
+and use the builtin default ruleset. For more davnced usage
+adding custom rules to the process we have:
+
+  rubiIntegrate( f(x), x, ruleset )
+
+or even:
+
+  rubiIntegrate( f(x), x, listOfRulesets )
+
+This allows us to incorporate new rules without changing
+any RUBI code.
+
+
+Handling larger collections of rules
+------------------------------------
+
+Rulebase system can become very slow if the collection of rules is large.
+An idea is to group the rules by some special operatos/functions. We could
+try order the operators by specialness:
+
+  polynomials < sin,cos,exp < gamma < erf, fresnel < bessel < ...
+
+Of course this order is not strict and unique and also not as linear as shown.
+Next we can work along this chain from top to bottom (really?) an drop all
+rulesets for the operators not present in the expression we aim to integrate.
+This more tree-like order of rules should avoid many unnecessary tries.

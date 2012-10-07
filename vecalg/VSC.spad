@@ -123,7 +123,7 @@ VectorAlg(R : Ring) : VectorAlgCategory(R) == Implementation where
   Implementation == add
 
     -- Basic data types used:
-    --coePart == R
+    coePart == R
     scaPart == List(List(String))
     vecPart == List(String)
     -- we dont want to use Strings, rather Exprs? Symbols? Variables?
@@ -165,7 +165,7 @@ VectorAlg(R : Ring) : VectorAlgCategory(R) == Implementation where
     vectorZero() :% == ([ [0, [], ["0"]] ])::%
       -- TODO: Fix "0" here
 
-    --vector(x:Symbol) :% == ([ [1, [], [x]] ])::%
+    --vector(x:Symbol) :% == ([ [1::R, [], [name x]] ])::Rep::%
       -- Does not compile, why? Need to quote x somehow?
       -- Recheck if we could omit the 1
 
@@ -235,6 +235,98 @@ VectorAlg(R : Ring) : VectorAlgCategory(R) == Implementation where
 
     -- Scalar times vector
     (r:R * x:%) :% ==
-      zz := [ [r*tx.coe, tx.sca, tx.vec] for tx in x::Rep ]
+      xx := x::Rep
+      zz := [ [r*tx.coe, tx.sca, tx.vec] for tx in xx ]
       normalForm(zz)::%
       --zz::%
+
+    -- Scalar product of two vectors
+    (x:% * y:%) :% ==
+      xx := x::Rep
+      yy := y::Rep
+
+      l : List(Term) := empty()
+
+      for tx in xx repeat
+        nx:INT := # tx.vec
+
+        for ty in yy repeat
+          ny:INT := # ty.vec
+
+          -- TODO: I'd like to use a else-if structure here, but it becomes too clumpsy! maybe try using "iterate"
+          vx := tx.vec
+          vy := ty.vec
+
+          if nx = 1 and ny = 1 then
+            scap := cons([vx(1),vy(1)], append(tx.sca,ty.sca))
+            m := [tx.coe * ty.coe, scap, []]@Term
+            l := cons(m,l)
+
+          if nx = 1 and ny = 2 then
+            scap := cons([vx(1),vy(1),vy(2)], append(tx.sca,ty.sca))
+            m := [tx.coe*ty.coe, scap, []]@Term
+            l := cons(m,l)
+
+          if nx = 2 and ny = 1 then
+            scap := cons([vx(1),vx(2),vy(1)], append(tx.sca,ty.sca))
+            m := [tx.coe*ty.coe, scap, []]@Term
+            l := cons(m,l)
+
+          if nx = 2 and ny = 2 then
+            coep := tx.coe*ty.coe
+            scap1 := [[vx(1),vy(1)], [vx(2),vy(2)]]
+            scap2 := [[vx(1),vy(2)], [vx(2),vy(1)]]
+            m1 := [coep, append(scap1,append(tx.sca,ty.sca)), []]@Term
+            m2 := [(-1)*coep, append(scap2,append(tx.sca,ty.sca)), []]@Term
+            l := cons(m2, cons(m1,l))
+
+      zz := normalForm reverse! l
+      zz::%
+
+    -- Cross product of two vectors
+    (x:% ^ y:%) :% ==
+      xx := x::Rep
+      yy := y::Rep
+
+      l : List(Term) := empty()
+
+      for tx in xx repeat
+        n1:INT := # tx.vec
+
+        for ty in yy repeat
+          n2:INT := # ty.vec
+
+          -- TODO: I'd like to use a else-if structure here, but it becomes too clumpsy!
+          -- try using "iterate"
+          -- if n1 = 1 and n2 = 1 then
+
+          --   m:=[tx.coe*ty.coe,append(tx.sca,ty.sca),append(tx.vec,ty.vec)]@Term;
+          --   l:=cons(m,l);
+
+          -- if n1 = 1 and n2 = 2 then
+
+          --   m1:=[tx.coe*ty.coe,cons([tx.vec(1),ty.vec(2)],
+          --           append(tx.sca,ty.sca)),[ty.vec(1)]]@Term;
+          --   m2:=[(-1)*tx.coe*ty.coe,cons([tx.vec(1),ty.vec(1)],
+          --           append(tx.sca,ty.sca)),[ty.vec(2)]]@Term;
+          --   l:=cons(m2,cons(m1,l));
+
+          -- if n1 = 2 and n2 = 1 then
+
+          --   m1:=[tx.coe*ty.coe,cons([tx.vec(1),ty.vec(1)],
+          --        append(tx.sca,ty.sca)),[tx.vec(2)]]@Term;
+          --   m2:=[(-1)*tx.coe*ty.coe,cons([tx.vec(2),ty.vec(1)],
+          --        append(tx.sca,ty.sca)),[tx.vec(1)]]@Term;
+          --   l:=cons(m2,cons(m1,l));
+
+          -- if n1 = 2 and n2 = 2 then
+
+          --   m1:=[tx.coe*ty.coe,cons([tx.vec(1),tx.vec(2),ty.vec(2)],
+          --        append(tx.sca,ty.sca)),[ty.vec(1)]]@Term;
+          --   m2:=[(-1)*tx.coe*ty.coe,cons([tx.vec(1),tx.vec(2),ty.vec(1)],
+          --        append(tx.sca,ty.sca)),[ty.vec(2)]]@Term;
+          --   l:=cons(m2,cons(m1,l));
+
+      zz := normalForm reverse! l
+      zz::%
+

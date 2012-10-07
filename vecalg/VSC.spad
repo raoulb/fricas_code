@@ -1,0 +1,124 @@
+<<category VSC VectorSpcCategory>>=
+)abbrev category VSC VectorSpcCategory
+++ Author: Raoul Bourquin
+VectorSpcCategory(R : Ring) : Category == Ring with
+
+    "+": (%, %) -> %
+
+    "-": (%, %) -> %
+    "-": % -> %
+
+    "*": (R, %) -> %
+    "*": (%, R) -> %
+
+    "=": (%, %) -> Boolean
+
+  add
+
+    (x:% - y:%) :% == x + (-1)::R * y
+    (-x:%) :% == (-1)::R * x
+
+    (x:% * r:R) :% == r * x
+
+    -- what about others?
+    -- x = y ==
+
+
+<<category VAC VectorAlgCategory>>=
+)abbrev category VAC VectorAlgCategory
+++ Author: Raoul Bourquin
+++ Date Created: 7 October 2012
+++ Date Last Updated: 7 October 2012
+++
+++ Axioms:
+++   \spad{ (a+b)^c = a^c + b^c }
+++   \spad{ a^b = -b^a }
+++   \spad{ a^(b^c) = (a.c)*b - (a.b)*c }
+++   \spad{ (abc) = (bca) } where \spad{(abc)} denotes \spad{(a^b).c}
+++   \spad{ (abc) = 0 } implies that \spad{a, b, c} are linearly dependent
+VectorAlgCategory(R : Ring) : Category == VectorSpcCategory(R) with
+
+    vector: Symbol -> %
+      ++ Create a vector object
+
+    scalarZero: () -> %
+    vectorZero: () -> %
+
+    isVector?: % -> Boolean
+
+    "*": (%, %) -> %
+      ++ Scalar-vector product (really? argument domains wrong?)
+
+    apply: (%, %) -> %
+      ++ Dot product
+
+    "^": (%, %) -> %
+      ++ Vector product, Cross product
+      -- rather use "/\"?
+
+    s3p: (%, %, %) -> %
+      ++ Triple product
+
+    simplify: % -> %
+
+    identity?: (%, %) -> Boolean
+
+  add
+
+    s3p(x:%, y:%, z:%) :% == apply(x^y, z)
+
+
+
+<<domain VA VectorAlg>>=
+)abbrev domain VA VectorAlg
+VectorAlg(R : Ring) : Exports == Implementation where
+
+  Exports == with
+
+    normalForm: % -> %
+      ++ Bring the vector expression into a normal form
+      ++ of type [coef, sca, vec]
+      ++ Example of a normal form:
+      ++ -2 * (a.b)*(abc) * (c^d)
+      ++ [-2, [[a, b],[a, b, c]], [c, d]]
+
+    --termOrder:
+      ++ Reorder the terms by the term order constructed
+
+    simplify: % -> %
+      ++ Simplify a given vector expression
+
+
+  Implementation == add
+
+    --coePart == R
+    scaPart == List(List(String))
+    vecPart == List(String)
+    -- we dont want to use Strings, rather Exprs? Symbols? Variables?
+
+    -- A single term
+    Term == Record(coe:R, sca:scaPart, vec:vecPart )
+
+    -- Normal form is sum of terms
+    Rep := List Term
+
+
+    -- Further structures
+    scaTerm == Record(coe2:R, sca2:scaPart )
+    scaList == List(scaTerm)
+    mixTerm == Record(scal: scaList, vec2: vecPart )
+
+
+    coefPart(x:Term) : R == x.coe
+    scalarPart(x:Term) : scaPart == x.sca
+
+
+    normalForm(x:%) :% == x
+      -- TODO
+      -- for all tx in x::Rep
+      --   make scalar part and vector part and check for zero
+      --   collect non-zero terms in y::Rep
+      --   sort yy in ascending order and return y::%
+
+    simplify(x:%) :% == x
+      --

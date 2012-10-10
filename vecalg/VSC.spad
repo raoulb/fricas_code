@@ -231,14 +231,12 @@ VectorAlg(R : Ring) : VectorAlgCategory(R) == Implementation where
     (x:% + y:%) :% ==
       zz := append(x::Rep, y::Rep)
       normalForm(zz)::%
-      --zz::%
 
     -- Scalar times vector
     (r:R * x:%) :% ==
       xx := x::Rep
       zz := [ [r*tx.coe, tx.sca, tx.vec] for tx in xx ]
       normalForm(zz)::%
-      --zz::%
 
     -- Scalar product of two vectors
     (x:% * y:%) :% ==
@@ -291,20 +289,20 @@ VectorAlg(R : Ring) : VectorAlgCategory(R) == Implementation where
       l : Rep := empty()
 
       for tx in xx repeat
-        n1:INT := # tx.vec
+        nx:INT := # tx.vec
 
         for ty in yy repeat
-          n2:INT := # ty.vec
+          ny:INT := # ty.vec
 
           -- TODO: I'd like to use a else-if structure here, but it becomes too clumpsy! try using "iterate"
           vx := tx.vec
           vy := ty.vec
 
-          if n1 = 1 and n2 = 1 then
+          if nx = 1 and ny = 1 then
             m := [tx.coe*ty.coe, append(tx.sca,ty.sca), append(tx.vec,ty.vec)]@Term
             l := cons(m,l)
 
-          if n1 = 1 and n2 = 2 then
+          if nx = 1 and ny = 2 then
             coep := tx.coe * ty.coe
             scap1 := cons([vx(1),vy(2)], append(tx.sca,ty.sca))
 	    scap2 := cons([vx(1),vy(1)], append(tx.sca,ty.sca))
@@ -312,16 +310,16 @@ VectorAlg(R : Ring) : VectorAlgCategory(R) == Implementation where
             m2 := [(-1)*coep, scap2, [vy(2)]]@Term
             l := cons(m2, cons(m1,l))
 
-          if n1 = 2 and n2 = 1 then
-            coep := tx.coe*ty.coe
+          if nx = 2 and ny = 1 then
+            coep := tx.coe * ty.coe
             scap1 := cons([vx(1),vy(1)], append(tx.sca,ty.sca))
             scap2 := cons([vx(2),vy(1)], append(tx.sca,ty.sca))
             m1 := [coep, scap1, [vx(2)]]@Term
             m2 := [(-1)*coep, scap2, [vx(1)]]@Term
             l := cons(m2, cons(m1,l))
 
-          if n1 = 2 and n2 = 2 then
-            coep := tx.coe*ty.coe
+          if nx = 2 and ny = 2 then
+            coep := tx.coe * ty.coe
 	    scap1 := cons([vx(1),vx(2),vy(2)], append(tx.sca,ty.sca))
 	    scap2 := cons([vx(1),vx(2),vy(1)], append(tx.sca,ty.sca))
             m1 := [coep, scap1, [vy(1)]]@Term

@@ -222,11 +222,8 @@ VectorAlg(R : Ring) : VectorAlgCategory(R) == Implementation where
     --normalForm(x:%) :% ==
     --  normalForm(x::Rep)::%
 
-    simplify(x:%) :% ==
-      normalForm(x::Rep)::%
-      -- TODO: Apply rules
-
     -- Implementation of algebraic operations
+
     -- Addition
     (x:% + y:%) :% ==
       zz := append(x::Rep, y::Rep)
@@ -328,3 +325,94 @@ VectorAlg(R : Ring) : VectorAlgCategory(R) == Implementation where
 
       zz := normalForm reverse! l
       zz::%
+
+    -- Term order functions
+
+    vectorOrder?(v1:vecPart, v2:vecPart) : Boolean ==
+      empty? v1 => true
+      empty? v2 => false
+      n1 := #v1
+      n2 := #v2
+      n1 < n2 => true
+      n1 > n2 => false
+
+      -- Case n1 = n2
+      result := true
+      for i in 1..n1 repeat
+        if v1(i) < v2(i) then
+          result := true
+          break
+
+        if v1(i) > v2(i) then
+          result := false
+          break
+
+      result
+
+    vectorEq?(v1:vecPart, v2:vecPart) : Boolean ==
+      empty? v1 and empty? v2 => true
+      empty? v1 and not empty? v2 => false
+      n1 := #v1
+      n2 := #v2
+      n1 ~= n2 => false
+
+      -- Case n1 = n2
+      result := true
+      for i in 1..n1 repeat
+        if v1(i) ~= v2(i) then
+          result := false
+          break
+
+      result
+
+    scalarOrder?(s1:scaPart, s2:scaPart) : Boolean ==
+      empty? s1 => true
+      empty? s2 => false
+      n1 := #s1
+      n2 := #s2
+      n1 < n2 => true
+      n1 > n2 => false
+      result := true
+
+      -- Case n1 = n2
+      for i in 1..n1 repeat
+        if vectorOrder?(s1(i), s2(i)) and not vectorEq?(s1(i), s2(i)) then
+          result := true
+          break
+
+        if not vectorOrder?(s1(i), s2(i)) then
+          result := false
+          break
+
+      result
+
+    scalarEq?(s1:scaPart, s2:scaPart) : Boolean ==
+      empty? s1 and empty? s2 => true
+      empty? s1 and not empty? s2 => false
+      n1 := #s1
+      n2 := #s2
+      n1 ~= n2 => false
+      result := true
+
+      -- Case n1 = n2
+      for i in 1..n1 repeat
+        if not vectorEq?(s1(i), s2(i)) then
+          result := false
+          break
+
+      result
+
+    termOrder?(t1:Term, t2:Term) : Boolean ==
+      szero? t1 or vzero? t1 => true
+      szero? t2 or vzero? t2 => false
+
+      vectorOrder?(t1.vec, t2.vec) and not vectorEq?(t1.vec, t2.vec) => true
+      not vectorEq?(t1.vec, t2.vec) => false
+
+      scalarOrder?(t1.sca, t2.sca) and not scalarEq?(t1.sca, t2.sca) => true
+      not scalarEq?(t1.sca, t2.sca) => false
+
+      true
+
+    termEq?(t1:Term, t2:Term) : Boolean ==
+      t1.coe = t2.coe and scalarEq?(t1.sca, t2.sca) and vectorEq?(t1.vec, t2.vec) => true

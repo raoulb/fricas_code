@@ -365,7 +365,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
             -- A small bubble sort, overkill but useful
             -- Counting version
             -- bubbleSort: (A, (S,S)->Boolen) -> (A, INT)
-	    -- should go into library (sortpack)!
+            -- should go into library (sortpack)!
             wasordered := false
             exchanges : INT := 0
             while not wasordered repeat
@@ -377,7 +377,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
                         wasordered := false
 
             nsp := cons(tmp, nsp)
-	    if odd? exchanges then nt.coe := -nt.coe
+            if odd? exchanges then nt.coe := -nt.coe
 
         -- Sort the scalar parts
         nt.sca := sort(listOrder?, nsp)
@@ -395,7 +395,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
           -- Axiom 2.2 applieas: a^b = -b^a
           if vp(1) > vp(2) then
             nvp := [vp(2), vp(1)]
-	    nt.coe := -nt.coe
+            nt.coe := -nt.coe
           else
             nvp := copy vp
 

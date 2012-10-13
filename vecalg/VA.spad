@@ -358,7 +358,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
           if #sp = 2 then
             -- A scalar product
-            -- Axiom 2.2 applieas: a*b = b*a
+            -- Axiom 2.2 applies: a*b = b*a
             tmp := copy sp
             nsp := cons(sort(tmp), nsp)
 
@@ -395,7 +395,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
         if #vp = 2 then
           -- A vector product
-          -- Axiom 2.2 applieas: a^b = -b^a
+          -- Axiom 2.2 applies: a^b = -b^a
           if vp(1) > vp(2) then
             nvp := [vp(2), vp(1)]
             nt.coe := -nt.coe
@@ -492,7 +492,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
           if nx = 1 and ny = 1 then
             m := [tx.coe*ty.coe, append(tx.sca,ty.sca), append(tx.vec,ty.vec)]@Term
-            zz := cons(m,zz)
+            zz := cons(m, zz)
 
           if nx = 1 and ny = 2 then
             coep := tx.coe * ty.coe
@@ -500,7 +500,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
             scap2 := cons([vx(1),vy(1)], append(tx.sca,ty.sca))
             m1 := [coep, scap1, [vy(1)]]@Term
             m2 := [(-1)*coep, scap2, [vy(2)]]@Term
-            zz := cons(m2, cons(m1,zz))
+            zz := append(zz, [m1, m2])
 
           if nx = 2 and ny = 1 then
             coep := tx.coe * ty.coe
@@ -508,7 +508,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
             scap2 := cons([vx(2),vy(1)], append(tx.sca,ty.sca))
             m1 := [coep, scap1, [vx(2)]]@Term
             m2 := [(-1)*coep, scap2, [vx(1)]]@Term
-            zz := cons(m2, cons(m1,zz))
+            zz := append(zz, [m1, m2])
 
           if nx = 2 and ny = 2 then
             coep := tx.coe * ty.coe
@@ -516,7 +516,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
             scap2 := cons([vx(1),vx(2),vy(1)], append(tx.sca,ty.sca))
             m1 := [coep, scap1, [vy(1)]]@Term
             m2 := [(-1)*coep, scap2, [vy(2)]]@Term
-            zz := cons(m2, cons(m1,zz))
+            zz := append(zz, [m1, m2])
 
       zz := normalForm reverse! zz
       per zz
@@ -526,10 +526,8 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
     coerce(x : %) : OutputForm ==
       xx := rep x
-      t1 := xx(1)
-      t1.coe :: OutputForm
-
-    -- What about latex printing?
+      t1:Term := first xx
+      t1.vec :: OutputForm
 
 
     -- Transformation rules based on the axioms

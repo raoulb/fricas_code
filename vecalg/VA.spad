@@ -151,6 +151,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
     scalarPart(x:Term) : scaPart == x.sca
     vectorPart(x:Term) : vecPart == x.vec
 
+
     -- Construct new domain elements
 
     scalarZero() : % == [ [0, [], []] ]::%
@@ -159,6 +160,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
       -- TODO: Fix "0" string here
 
     vector(x:Symbol) : % == [ [1::R, [], [string x]] ]::%
+
 
     -- Check a term for beeing zero
 
@@ -184,6 +186,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
       result := true
       for tx in xx repeat
         not szero? tx or not vzero? tx => false
+
 
     -- Check shapes
 
@@ -217,6 +220,101 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
         empty? tx.vec => (result := false)
       result
 
+
+    -- Term order functions
+
+    listOrder?(v1:vecPart, v2:vecPart) : Boolean ==
+      empty? v1 => true
+      empty? v2 => false
+      n1 := #v1
+      n2 := #v2
+      n1 < n2 => true
+      n1 > n2 => false
+
+      -- Case n1 = n2
+      result := true
+      for i in 1..n1 repeat
+        if v1(i) < v2(i) then
+          result := true
+          break
+
+        if v1(i) > v2(i) then
+          result := false
+          break
+
+      result
+
+    listEq?(v1:vecPart, v2:vecPart) : Boolean ==
+      empty? v1 and empty? v2 => true
+      empty? v1 and not empty? v2 => false
+      n1 := #v1
+      n2 := #v2
+      n1 ~= n2 => false
+
+      -- Case n1 = n2
+      result := true
+      for i in 1..n1 repeat
+        if v1(i) ~= v2(i) then
+          result := false
+          break
+
+      result
+
+    listListOrder?(s1:scaPart, s2:scaPart) : Boolean ==
+      empty? s1 => true
+      empty? s2 => false
+      n1 := #s1
+      n2 := #s2
+      n1 < n2 => true
+      n1 > n2 => false
+      result := true
+
+      -- Case n1 = n2
+      for i in 1..n1 repeat
+        if listOrder?(s1(i), s2(i)) and not listEq?(s1(i), s2(i)) then
+          result := true
+          break
+
+        if not listOrder?(s1(i), s2(i)) then
+          result := false
+          break
+
+      result
+
+    listListEq?(s1:scaPart, s2:scaPart) : Boolean ==
+      empty? s1 and empty? s2 => true
+      empty? s1 and not empty? s2 => false
+      n1 := #s1
+      n2 := #s2
+      n1 ~= n2 => false
+      result := true
+
+      -- Case n1 = n2
+      for i in 1..n1 repeat
+        if not listEq?(s1(i), s2(i)) then
+          result := false
+          break
+
+      result
+
+    termOrder?(t1:Term, t2:Term) : Boolean ==
+      szero? t1 or vzero? t1 => true
+      szero? t2 or vzero? t2 => false
+
+      listOrder?(t1.vec, t2.vec) and not listEq?(t1.vec, t2.vec) => true
+      not listEq?(t1.vec, t2.vec) => false
+
+      listListOrder?(t1.sca, t2.sca) and not listListEq?(t1.sca, t2.sca) => true
+      not listListEq?(t1.sca, t2.sca) => false
+
+      true
+
+    termEq?(t1:Term, t2:Term) : Boolean ==
+      t1.coe = t2.coe and listListEq?(t1.sca, t2.sca) and listEq?(t1.vec, t2.vec) => true
+
+
+
+
     -- Bring the vector expression into a normal form
     -- of type [coef, sca, vec]
     -- Example of a normal form:
@@ -230,22 +328,91 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
       --   make yy in ascending order
       --   combine same terms
       -- return y
+
+      -- TODO: Check for zeros:
+      --         coe = 0
+      --         sca is zero
+      --         vec is zero
+      --       We have
+      --         a^a -> 0 and 0^a -> 0 and a^0 -> 0
+      --         (aab) -> 0 and (abb) -> 0 and no check for (aba) because of sorting
+      --       With assumption we could also do
+      --         a*b -> 0 for a _|_ b
       result : Rep := empty()
-      tf : INT := 0
 
       for tx in xx repeat
-        szero? tx => result := result
-        vzero? tx => tf := 1
-        result := cons(tx, result)
+        -- Result term
+        nt : Term := [tx.coe, [], []]
 
-      empty? result and tf = 0 => [ [0, [], [] ] ]::Rep
-      empty? result and tf = 1 => [ [0, [], ["0"]] ]::Rep
-        -- TODO: Fix "0" here
+        -- Order scalar parts
+        scaParts := tx.sca
+        nsp : scaPart := empty()
+
+        for sp in scaParts repeat
+          if #sp = 1 then
+            -- A single scalar part (how to obtain?)
+            nsp := cons(sp, nsp)
+
+          if #sp = 2 then
+            -- A scalar product
+            -- Axiom 2.2 applieas: a*b = b*a
+            tmp := copy sp
+            nsp := cons(sort(tmp), nsp)
+
+          if #sp = 3 then
+            -- A scalar triple product
+            tmp := copy sp
+            -- A small bubble sort, overkill but useful
+            -- Counting version
+            -- bubbleSort: (A, (S,S)->Boolen) -> (A, INT)
+	    -- should go into library (sortpack)!
+            wasordered := false
+            exchanges : INT := 0
+            while not wasordered repeat
+                wasordered := true
+                for i in 1..#tmp-1 repeat
+                    if tmp.i > tmp.(i+1) then
+                        t := tmp.i; tmp.i := tmp.(i+1); tmp.(i+1) := t
+                        exchanges := exchanges + 1
+                        wasordered := false
+
+            nsp := cons(tmp, nsp)
+	    if odd? exchanges then nt.coe := -nt.coe
+
+        -- Sort the scalar parts
+        nt.sca := sort(listOrder?, nsp)
+
+        -- Order vector parts
+        vp := tx.vec
+        nvp : vecPart := empty()
+
+        if #vp = 1 then
+          -- A single vector part
+          nvp := vp
+
+        if #vp = 2 then
+          -- A vector product
+          -- Axiom 2.2 applieas: a^b = -b^a
+          if vp(1) > vp(2) then
+            nvp := [vp(2), vp(1)]
+	    nt.coe := -nt.coe
+          else
+            nvp := copy vp
+
+        nt.vec := nvp
+
+        -- Add new term to the result
+        result := cons(nt, result)
+
+      -- Sort the terms in the result
+      result := sort(termOrder?, result)
+
 
     -- Do we really want to make this available, for what?
     -- Issue: makes "something" looping
     --normalForm(x:%) : % ==
     --  normalForm(x::Rep)::%
+
 
     -- Implementation of algebraic operations
 
@@ -350,97 +517,6 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
       zz := normalForm reverse! zz
       zz::%
-
-    -- Term order functions
-
-    listOrder?(v1:vecPart, v2:vecPart) : Boolean ==
-      empty? v1 => true
-      empty? v2 => false
-      n1 := #v1
-      n2 := #v2
-      n1 < n2 => true
-      n1 > n2 => false
-
-      -- Case n1 = n2
-      result := true
-      for i in 1..n1 repeat
-        if v1(i) < v2(i) then
-          result := true
-          break
-
-        if v1(i) > v2(i) then
-          result := false
-          break
-
-      result
-
-    listEq?(v1:vecPart, v2:vecPart) : Boolean ==
-      empty? v1 and empty? v2 => true
-      empty? v1 and not empty? v2 => false
-      n1 := #v1
-      n2 := #v2
-      n1 ~= n2 => false
-
-      -- Case n1 = n2
-      result := true
-      for i in 1..n1 repeat
-        if v1(i) ~= v2(i) then
-          result := false
-          break
-
-      result
-
-    listListOrder?(s1:scaPart, s2:scaPart) : Boolean ==
-      empty? s1 => true
-      empty? s2 => false
-      n1 := #s1
-      n2 := #s2
-      n1 < n2 => true
-      n1 > n2 => false
-      result := true
-
-      -- Case n1 = n2
-      for i in 1..n1 repeat
-        if listOrder?(s1(i), s2(i)) and not listEq?(s1(i), s2(i)) then
-          result := true
-          break
-
-        if not listOrder?(s1(i), s2(i)) then
-          result := false
-          break
-
-      result
-
-    listListEq?(s1:scaPart, s2:scaPart) : Boolean ==
-      empty? s1 and empty? s2 => true
-      empty? s1 and not empty? s2 => false
-      n1 := #s1
-      n2 := #s2
-      n1 ~= n2 => false
-      result := true
-
-      -- Case n1 = n2
-      for i in 1..n1 repeat
-        if not listEq?(s1(i), s2(i)) then
-          result := false
-          break
-
-      result
-
-    termOrder?(t1:Term, t2:Term) : Boolean ==
-      szero? t1 or vzero? t1 => true
-      szero? t2 or vzero? t2 => false
-
-      listOrder?(t1.vec, t2.vec) and not listEq?(t1.vec, t2.vec) => true
-      not listEq?(t1.vec, t2.vec) => false
-
-      listListOrder?(t1.sca, t2.sca) and not listListEq?(t1.sca, t2.sca) => true
-      not listListEq?(t1.sca, t2.sca) => false
-
-      true
-
-    termEq?(t1:Term, t2:Term) : Boolean ==
-      t1.coe = t2.coe and listListEq?(t1.sca, t2.sca) and listEq?(t1.vec, t2.vec) => true
 
 
     -- Output of domain elements

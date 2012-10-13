@@ -304,7 +304,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
           if nx = 1 and ny = 2 then
             coep := tx.coe * ty.coe
             scap1 := cons([vx(1),vy(2)], append(tx.sca,ty.sca))
-	    scap2 := cons([vx(1),vy(1)], append(tx.sca,ty.sca))
+            scap2 := cons([vx(1),vy(1)], append(tx.sca,ty.sca))
             m1 := [coep, scap1, [vy(1)]]@Term
             m2 := [(-1)*coep, scap2, [vy(2)]]@Term
             l := cons(m2, cons(m1,l))
@@ -319,8 +319,8 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
           if nx = 2 and ny = 2 then
             coep := tx.coe * ty.coe
-	    scap1 := cons([vx(1),vx(2),vy(2)], append(tx.sca,ty.sca))
-	    scap2 := cons([vx(1),vx(2),vy(1)], append(tx.sca,ty.sca))
+            scap1 := cons([vx(1),vx(2),vy(2)], append(tx.sca,ty.sca))
+            scap2 := cons([vx(1),vx(2),vy(1)], append(tx.sca,ty.sca))
             m1 := [coep, scap1, [vy(1)]]@Term
             m2 := [(-1)*coep, scap2, [vy(2)]]@Term
             l := cons(m2, cons(m1,l))
@@ -443,33 +443,94 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
       for tx in yy repeat
         -- Copy terms not suitable for this rule over to the result
         if #tx.vec ~= 1 or empty? tx.sca then
-	  result := cons(tx, result)
+          result := cons(tx, result)
 
         -- Handle terms for which the rule applies
-	else
+        else
           scaTerms := tx.sca
-	  n := #scaTerms
-	  atp:List String := empty()
-	  rest:List List String := empty()
+          n := #scaTerms
+          atp:List String := empty()
+          others:List List String := empty()
 
           -- Take out the first single triple product
-	  for i in 1..n repeat
+          for i in 1..n repeat
             if #scaTerms(i) = 3 then
-       	      atp := scaTerms(i)
-	      rest := [scaTerms(j) for j in 1..n | j ~= i]
-	      break
+              atp := scaTerms(i)
+              others := [scaTerms(j) for j in 1..n | j ~= i]
+              break
 
           -- Take out the first single vector
-      	  d := first tx.vec
+          d := first tx.vec
 
-	  if #atp ~= 3 then
+          if #atp ~= 3 then
             -- No triple product found, add tx to the result and terminate
-	    result := cons(tx, result)
-      	  else
+            result := cons(tx, result)
+          else
             -- There was a triple product, add the 3 terms of the axioms RHS to the result
-            t1:Term := [tx.coe, cons([d,atp(1)], rest), [atp(2),atp(3)]]
-            t2:Term := [tx.coe, cons([d,atp(2)], rest), [atp(3),atp(1)]]
-            t3:Term := [tx.coe, cons([d,atp(3)], rest), [atp(1),atp(2)]]
-      	    result := append(result, [t1,t2,t3])
+            t1:Term := [tx.coe, cons([d,atp(1)], others), [atp(2),atp(3)]]
+            t2:Term := [tx.coe, cons([d,atp(2)], others), [atp(3),atp(1)]]
+            t3:Term := [tx.coe, cons([d,atp(3)], others), [atp(1),atp(2)]]
+            result := append(result, [t1,t2,t3])
+
+      result
+
+
+    rule02(xx:Rep) : Rep ==
+      ++ This rule implements the expansion according to the axiom
+      ++ (abc)*(d^h) = ((b^c)*(d^h))*a + ((c^a)*(d^h))*b + ((a^b)*(d^h))*c
+      ++             =   ( (b*d)*(c*h) - (b*h)*(c*d) ) * a
+      ++               + ( (c*d)*(a*h) - (c*h)*(a*d) ) * b
+      ++               + ( (a*d)*(b*h) - (a*h)*(b*d) ) * c
+      ++             =   (b*d)*(c*h)*a - (b*h)*(c*d)*a
+      ++               + (c*d)*(a*h)*b - (c*h)*(a*d)*b
+      ++               + (a*d)*(b*h)*c - (a*h)*(b*d)*c
+      -- Less than 3 terms in the expression? (Why do we do this?)
+      #xx < 3 => xx
+
+      -- Not a real vector? In that case the shapes will not match anyway
+      not isVector?(xx::%) => xx
+
+      yy := sort!(termOrder?, copy(xx))
+
+      result:Rep := empty()
+
+      for tx in yy repeat
+        -- Copy terms not suitable for this rule over to the result
+        if #tx.vec ~= 2 or empty? tx.sca then
+          result := cons(tx, result)
+
+        -- Handle terms for which the rule applies
+        else
+          scaTerms := tx.sca
+          n := #scaTerms
+          atp:List String := empty()
+          others:List List String := empty()
+
+          -- Take out the first single triple product
+          for i in 1..n repeat
+            if #scaTerms(i) = 3 then
+              atp := scaTerms(i)
+              others := [scaTerms(j) for j in 1..n | j ~= i]
+              break
+
+          -- Take out the first two single vectors
+          d := first tx.vec
+          h := second tx.vec
+
+          if #atp ~= 3 then
+            -- No triple product found, add tx to the result and terminate
+            result := cons(tx, result)
+          else
+            -- There was a triple product, add the 6 terms of the axioms RHS to the result
+            a := atp(1)
+            b := atp(2)
+            c := atp(3)
+            t1:Term := [ tx.coe, append(others, [[b,d], [c,h]]), [a]]
+            t2:Term := [-tx.coe, append(others, [[b,h], [c,d]]), [a]]
+            t3:Term := [ tx.coe, append(others, [[c,d], [a,h]]), [b]]
+            t4:Term := [-tx.coe, append(others, [[c,h], [a,d]]), [b]]
+            t5:Term := [ tx.coe, append(others, [[a,d], [b,h]]), [c]]
+            t6:Term := [-tx.coe, append(others, [[a,h], [b,d]]), [c]]
+            result := append(result, [t1,t2,t3,t4,t5,t6])
 
       result

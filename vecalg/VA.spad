@@ -62,11 +62,16 @@ VectorAlgebraCategory(R : Ring) : Category == VectorSpaceCategory(R) with
     vectorZero: () -> %
       ++ Create a vector zero object
 
+    isScalar?: % -> Boolean
+      ++ Check if a given expression is scalar valued
+
     isVector?: % -> Boolean
-      ++ Test if the given expression is really a vector
+      ++ Check if a given expression is vector valued
+
+    zero?: % -> Boolean
 
     "*": (%, %) -> %
-      ++ Dot product
+      ++ Dot/scalar product
       -- Possible confusion with inherited r:R*v:% from VSC?
 
     "^": (%, %) -> %
@@ -77,8 +82,12 @@ VectorAlgebraCategory(R : Ring) : Category == VectorSpaceCategory(R) with
       ++ Triple vector product
 
     simplify: % -> %
+      ++ Simplify a given vector expression by first
+      ++ bring it to the normal form, then apply
+      ++ transformation rules
 
     identity?: (%, %) -> Boolean
+      ++ Check if two expressions are equal in value
 
   add
 
@@ -97,9 +106,6 @@ VectorAlgebraCategory(R : Ring) : Category == VectorSpaceCategory(R) with
 ++ by Songxin Liang and David J. Jeffrey
 VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
-  INT ==> Integer
-
-
   Exports == with
 
     --normalForm: % -> %
@@ -114,62 +120,79 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
     -- What can we gain by exporting this?
       ++ Reorder the terms by the term order constructed
 
-    simplify: % -> %
-      ++ Simplify a given vector expression by first
-      ++ bring it to the normal form, then apply
-      ++ transformation rules
-
     coerce: % -> OutputForm
+      -- Used for printing?
 
 
   Implementation == add
 
-    -- Basic data types used:
+    INT ==> Integer
+
+    -- Basic data types used
     coePart == R
-    scaPart == List(List(String))
-    vecPart == List(String)
+    scaPart == List List String
+    vecPart == List String
     -- we dont want to use Strings, rather Exprs? Symbols? Variables?
 
-    -- A single term alpha * a * v
-    Term == Record(coe:R, sca:scaPart, vec:vecPart )
+    -- A single term is of the form alpha * a * v
+    Term == Record(coe:R, sca:scaPart, vec:vecPart)
 
-    -- Normal form is sum of terms
+    -- A normal form is a sum of terms
     Rep := List Term
 
-
-    -- Further structures used for simplification
-    scaTerm == Record(coe2:R, sca2:scaPart )
+    -- Further structures used for contraction rules
+    scaTerm == Record(coe2:R, sca2:scaPart)
     scaList == List(scaTerm)
-    mixTerm == Record(scal: scaList, vec2: vecPart )
+    mixTerm == Record(scal: scaList, vec2: vecPart)
 
     -- Extract single parts out of terms
-    -- Do we need really this?
+    -- Do we really need this?
     coefPart(x:Term) : R == x.coe
     scalarPart(x:Term) : scaPart == x.sca
     vectorPart(x:Term) : vecPart == x.vec
 
-    -- Check term for beeing zero
-    szero?(x:Term) :Boolean ==
+    -- Construct new domain elements
+
+    scalarZero() : % == [ [0, [], []] ]::%
+
+    vectorZero() : % == [ [0, [], ["0"]] ]::%
+      -- TODO: Fix "0" string here
+
+    vector(x:Symbol) : % == [ [1::R, [], [string x]] ]::%
+
+    -- Check a term for beeing zero
+
+    szero?(x:Term) : Boolean ==
       -- Coefficient is zero and there is no vector part
-      -- But what about scalar part?
+      -- But what about scalar part: scalar part could be zero
+      -- if it contains a scalar product of orthogonal vectors.
+      -- But: we can not make any assumptions on abstract vectors yet!
       x.coe = 0 and empty? x.vec
 
-    vzero?(x:Term) :Boolean ==
+    vzero?(x:Term) : Boolean ==
       -- Vector is zero or multiplied by zero coefficient
-      -- But what about scalar part?
+      -- But what about scalar part: scalar part could be zero
+      -- if it contains a scalar product of orthogonal vectors.
+      -- But: we can not make any assumptions on abstract vectors yet!
       empty? x.vec or (x.coe = 0 and ~empty? x.vec)
-      -- and this one:
-      -- or x.vec(1)::R = 0::R
+      -- What about x.vec beeing a zero?
+      -- Or a vector product with one factor a zero?
 
-    -- Construct new domain elements
-    scalarZero() :% == ([ [0, [], []] ])::%
+    zero?(x:%) : Boolean ==
+      -- Buggy because of the above issues!
+      xx := x::Rep
+      result := true
+      for tx in xx repeat
+        not szero? tx or not vzero? tx => false
 
-    vectorZero() :% == ([ [0, [], ["0"]] ])::%
-      -- TODO: Fix "0" here
+    -- Check shapes
 
-    vector(x:Symbol) :% == ([ [1::R, [[]], ["x"]] ])::%
-      -- Does not compile, why? Need to quote x somehow?
-      -- Recheck if we could omit the 1
+    isScalar?(x:%) : Boolean ==
+      xx := x::Rep
+      result := true
+      for tx in xx repeat
+        not empty? tx.vec => result := false
+      result
 
     -- Check if an expression is a true vector (possibly zero)
     -- or just a scalar expression. Examples for single terms:
@@ -183,7 +206,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
     -- [a, [...], [v]]  vector
     -- [a, [...], [v, w]]  vector
     -- [0, [...], [u, v, w]]  vector? (triple product evaluated result in scalar!)
-    isVector?(x:%) :Boolean ==
+    isVector?(x:%) : Boolean ==
       xx := x::Rep
       -- Empty expression / normal form
       empty? xx => false
@@ -199,50 +222,50 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
     -- Example of a normal form:
     -- -2 * (a.b)*(abc) * (c^d)
     -- [-2, [[a, b],[a, b, c]], [c, d]]
-    normalForm(x:Rep) :Rep ==
-      -- for all tx in x::Rep
-      --   make scalar part and vector part and check for zero
-      --   collect non-zero terms in yy::Rep
-      --   sort yy in ascending order and return y::%
-      l : List(Term) := empty()
+    normalForm(xx:Rep) : Rep ==
+      -- for all tx in xx
+      --   make scalar part and vector part in ascending order
+      --   use transformation rules to check for zero
+      --   collect non-zero terms in yy
+      --   make yy in ascending order
+      --   combine same terms
+      -- return y
+      result : Rep := empty()
       tf : INT := 0
 
-      for tx in x repeat
-        szero? tx => l := l
+      for tx in xx repeat
+        szero? tx => result := result
         vzero? tx => tf := 1
-        l := cons(tx, l)
+        result := cons(tx, result)
 
-      empty? l and tf = 0 => ([ [0, [], [] ] ])::Rep
-      empty? l and tf = 1 => ([ [0, [], ["0"]] ])::Rep
+      empty? result and tf = 0 => [ [0, [], [] ] ]::Rep
+      empty? result and tf = 1 => [ [0, [], ["0"]] ]::Rep
         -- TODO: Fix "0" here
-
-      reverse! l
-      l::Rep
 
     -- Do we really want to make this available, for what?
     -- Issue: makes "something" looping
-    --normalForm(x:%) :% ==
+    --normalForm(x:%) : % ==
     --  normalForm(x::Rep)::%
 
     -- Implementation of algebraic operations
 
     -- Addition
-    (x:% + y:%) :% ==
+    (x:% + y:%) : % ==
       zz := append(x::Rep, y::Rep)
       normalForm(zz)::%
 
     -- Scalar times vector
-    (r:R * x:%) :% ==
+    (r:R * x:%) : % ==
       xx := x::Rep
       zz := [ [r*tx.coe, tx.sca, tx.vec] for tx in xx ]
       normalForm(zz)::%
 
     -- Scalar product of two vectors
-    (x:% * y:%) :% ==
+    (x:% * y:%) : % ==
       xx := x::Rep
       yy := y::Rep
 
-      l : Rep := empty()
+      zz : Rep := empty()
 
       for tx in xx repeat
         nx:INT := # tx.vec
@@ -257,17 +280,17 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
           if nx = 1 and ny = 1 then
             scap := cons([vx(1),vy(1)], append(tx.sca,ty.sca))
             m := [tx.coe * ty.coe, scap, []]@Term
-            l := cons(m,l)
+            zz := cons(m,zz)
 
           if nx = 1 and ny = 2 then
             scap := cons([vx(1),vy(1),vy(2)], append(tx.sca,ty.sca))
             m := [tx.coe*ty.coe, scap, []]@Term
-            l := cons(m,l)
+            zz := cons(m,zz)
 
           if nx = 2 and ny = 1 then
             scap := cons([vx(1),vx(2),vy(1)], append(tx.sca,ty.sca))
             m := [tx.coe*ty.coe, scap, []]@Term
-            l := cons(m,l)
+            zz := cons(m,zz)
 
           if nx = 2 and ny = 2 then
             coep := tx.coe * ty.coe
@@ -275,9 +298,9 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
             scap2 := [[vx(1),vy(2)], [vx(2),vy(1)]]
             m1 := [coep, append(scap1,append(tx.sca,ty.sca)), []]@Term
             m2 := [(-1)*coep, append(scap2,append(tx.sca,ty.sca)), []]@Term
-            l := cons(m2, cons(m1,l))
+            zz := cons(m2, cons(m1,zz))
 
-      zz := normalForm reverse! l
+      zz := normalForm reverse! zz
       zz::%
 
     -- Cross product of two vectors
@@ -285,7 +308,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
       xx := x::Rep
       yy := y::Rep
 
-      l : Rep := empty()
+      zz : Rep := empty()
 
       for tx in xx repeat
         nx:INT := # tx.vec
@@ -299,7 +322,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
           if nx = 1 and ny = 1 then
             m := [tx.coe*ty.coe, append(tx.sca,ty.sca), append(tx.vec,ty.vec)]@Term
-            l := cons(m,l)
+            zz := cons(m,zz)
 
           if nx = 1 and ny = 2 then
             coep := tx.coe * ty.coe
@@ -307,7 +330,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
             scap2 := cons([vx(1),vy(1)], append(tx.sca,ty.sca))
             m1 := [coep, scap1, [vy(1)]]@Term
             m2 := [(-1)*coep, scap2, [vy(2)]]@Term
-            l := cons(m2, cons(m1,l))
+            zz := cons(m2, cons(m1,zz))
 
           if nx = 2 and ny = 1 then
             coep := tx.coe * ty.coe
@@ -315,7 +338,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
             scap2 := cons([vx(2),vy(1)], append(tx.sca,ty.sca))
             m1 := [coep, scap1, [vx(2)]]@Term
             m2 := [(-1)*coep, scap2, [vx(1)]]@Term
-            l := cons(m2, cons(m1,l))
+            zz := cons(m2, cons(m1,zz))
 
           if nx = 2 and ny = 2 then
             coep := tx.coe * ty.coe
@@ -323,9 +346,9 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
             scap2 := cons([vx(1),vx(2),vy(1)], append(tx.sca,ty.sca))
             m1 := [coep, scap1, [vy(1)]]@Term
             m2 := [(-1)*coep, scap2, [vy(2)]]@Term
-            l := cons(m2, cons(m1,l))
+            zz := cons(m2, cons(m1,zz))
 
-      zz := normalForm reverse! l
+      zz := normalForm reverse! zz
       zz::%
 
     -- Term order functions
@@ -420,10 +443,15 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
       t1.coe = t2.coe and listListEq?(t1.sca, t2.sca) and listEq?(t1.vec, t2.vec) => true
 
 
+    -- Output of domain elements
+
     coerce(x : %) : OutputForm ==
       xx := x::Rep
       t1 := xx(1)
       t1.coe :: OutputForm
+
+    -- What about latex printing?
+
 
     -- Transformation rules based on the axioms
 

@@ -128,6 +128,9 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
     INT ==> Integer
 
+    rep x ==> (x@%) pretend Rep
+    per x ==> (x@Rep) pretend %
+
     -- Basic data types used
     coePart == R
     scaPart == List List String
@@ -138,7 +141,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
     Term == Record(coe:R, sca:scaPart, vec:vecPart)
 
     -- A normal form is a sum of terms
-    Rep := List Term
+    Rep == List Term
 
     -- Further structures used for contraction rules
     scaTerm == Record(coe2:R, sca2:scaPart)
@@ -154,12 +157,12 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
     -- Construct new domain elements
 
-    scalarZero() : % == [ [0, [], []] ]::%
+    scalarZero() : % == per [ [0, [], []] ]
 
-    vectorZero() : % == [ [0, [], ["0"]] ]::%
+    vectorZero() : % == per [ [0, [], ["0"]] ]
       -- TODO: Fix "0" string here
 
-    vector(x:Symbol) : % == [ [1::R, [], [string x]] ]::%
+    vector(x:Symbol) : % == per [ [1::R, [], [string x]] ]
 
 
     -- Check a term for beeing zero
@@ -182,7 +185,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
     zero?(x:%) : Boolean ==
       -- Buggy because of the above issues!
-      xx := x::Rep
+      xx := rep x
       result := true
       for tx in xx repeat
         not szero? tx or not vzero? tx => false
@@ -191,7 +194,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
     -- Check shapes
 
     isScalar?(x:%) : Boolean ==
-      xx := x::Rep
+      xx := rep x
       result := true
       for tx in xx repeat
         not empty? tx.vec => result := false
@@ -210,7 +213,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
     -- [a, [...], [v, w]]  vector
     -- [0, [...], [u, v, w]]  vector? (triple product evaluated result in scalar!)
     isVector?(x:%) : Boolean ==
-      xx := x::Rep
+      xx := rep x
       -- Empty expression / normal form
       empty? xx => false
       -- We can only sum up compatible terms in the normal form
@@ -418,19 +421,19 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
     -- Addition
     (x:% + y:%) : % ==
-      zz := append(x::Rep, y::Rep)
-      normalForm(zz)::%
+      zz := append(rep x, rep y)
+      per normalForm(zz)
 
     -- Scalar times vector
     (r:R * x:%) : % ==
-      xx := x::Rep
+      xx := rep x
       zz := [ [r*tx.coe, tx.sca, tx.vec] for tx in xx ]
-      normalForm(zz)::%
+      per normalForm(zz)
 
     -- Scalar product of two vectors
     (x:% * y:%) : % ==
-      xx := x::Rep
-      yy := y::Rep
+      xx := rep x
+      yy := rep y
 
       zz : Rep := empty()
 
@@ -468,12 +471,12 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
             zz := cons(m2, cons(m1,zz))
 
       zz := normalForm reverse! zz
-      zz::%
+      per zz
 
     -- Cross product of two vectors
     (x:% ^ y:%) :% ==
-      xx := x::Rep
-      yy := y::Rep
+      xx := rep x
+      yy := rep y
 
       zz : Rep := empty()
 
@@ -516,13 +519,13 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
             zz := cons(m2, cons(m1,zz))
 
       zz := normalForm reverse! zz
-      zz::%
+      per zz
 
 
     -- Output of domain elements
 
     coerce(x : %) : OutputForm ==
-      xx := x::Rep
+      xx := rep x
       t1 := xx(1)
       t1.coe :: OutputForm
 
@@ -538,7 +541,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
       #xx < 3 => xx
 
       -- Not a real vector? In that case the shapes will not match anyway
-      not isVector?(xx::%) => xx
+      not isVector?(per xx) => xx
 
       yy := sort!(termOrder?, copy(xx))
 
@@ -592,7 +595,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
       #xx < 3 => xx
 
       -- Not a real vector? In that case the shapes will not match anyway
-      not isVector?(xx::%) => xx
+      not isVector?(per xx) => xx
 
       yy := sort!(termOrder?, copy(xx))
 

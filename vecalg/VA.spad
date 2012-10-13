@@ -2,7 +2,7 @@
 )abbrev category VSC VectorSpaceCategory
 ++ Author: Raoul Bourquin
 ++ Date Created: 7 October 2012
-++ Date Last Updated: 7 October 2012
+++ Date Last Updated: 12 October 2012
 ++ Description:
 ++ Implementation of component-free vector algebra
 ++ based on the techniques described in the paper
@@ -37,7 +37,7 @@ VectorSpaceCategory(R : Ring) : Category == with
 )abbrev category VAC VectorAlgebraCategory
 ++ Author: Raoul Bourquin
 ++ Date Created: 7 October 2012
-++ Date Last Updated: 7 October 2012
+++ Date Last Updated: 12 October 2012
 ++ Description:
 ++ Implementation of component-free vector algebra
 ++ based on the techniques described in the paper
@@ -51,6 +51,7 @@ VectorSpaceCategory(R : Ring) : Category == with
 ++   \spad{ (abc) = (bca) } where \spad{(abc)} denotes \spad{(a^b).c}
 ++   \spad{ (abc) = 0 } implies that \spad{a, b, c} are linearly dependent
 VectorAlgebraCategory(R : Ring) : Category == VectorSpaceCategory(R) with
+    -- or Algebra(R) ?
 
     vector: Symbol -> %
       ++ Create a symbolic component-free vector object
@@ -84,12 +85,11 @@ VectorAlgebraCategory(R : Ring) : Category == VectorSpaceCategory(R) with
     s3p(x:%, y:%, z:%) :% == (x^y) * z
 
 
-
 <<domain VA VectorAlgebra>>=
 )abbrev domain VA VectorAlgebra
 ++ Author: Raoul Bourquin
 ++ Date Created: 7 October 2012
-++ Date Last Updated: 7 October 2012
+++ Date Last Updated: 12 October 2012
 ++ Description:
 ++ Implementation of component-free vector algebra
 ++ based on the techniques described in the paper
@@ -118,6 +118,8 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
       ++ Simplify a given vector expression by first
       ++ bring it to the normal form, then apply
       ++ transformation rules
+
+    coerce: % -> OutputForm
 
 
   Implementation == add
@@ -165,7 +167,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
     vectorZero() :% == ([ [0, [], ["0"]] ])::%
       -- TODO: Fix "0" here
 
-    --vector(x:Symbol) :% == ([ [1::R, [], [name x]] ])::Rep::%
+    vector(x:Symbol) :% == ([ [1::R, [[]], ["x"]] ])::%
       -- Does not compile, why? Need to quote x somehow?
       -- Recheck if we could omit the 1
 
@@ -328,7 +330,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
     -- Term order functions
 
-    vectorOrder?(v1:vecPart, v2:vecPart) : Boolean ==
+    listOrder?(v1:vecPart, v2:vecPart) : Boolean ==
       empty? v1 => true
       empty? v2 => false
       n1 := #v1
@@ -349,7 +351,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
       result
 
-    vectorEq?(v1:vecPart, v2:vecPart) : Boolean ==
+    listEq?(v1:vecPart, v2:vecPart) : Boolean ==
       empty? v1 and empty? v2 => true
       empty? v1 and not empty? v2 => false
       n1 := #v1
@@ -365,7 +367,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
       result
 
-    scalarOrder?(s1:scaPart, s2:scaPart) : Boolean ==
+    listListOrder?(s1:scaPart, s2:scaPart) : Boolean ==
       empty? s1 => true
       empty? s2 => false
       n1 := #s1
@@ -376,17 +378,17 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
       -- Case n1 = n2
       for i in 1..n1 repeat
-        if vectorOrder?(s1(i), s2(i)) and not vectorEq?(s1(i), s2(i)) then
+        if listOrder?(s1(i), s2(i)) and not listEq?(s1(i), s2(i)) then
           result := true
           break
 
-        if not vectorOrder?(s1(i), s2(i)) then
+        if not listOrder?(s1(i), s2(i)) then
           result := false
           break
 
       result
 
-    scalarEq?(s1:scaPart, s2:scaPart) : Boolean ==
+    listListEq?(s1:scaPart, s2:scaPart) : Boolean ==
       empty? s1 and empty? s2 => true
       empty? s1 and not empty? s2 => false
       n1 := #s1
@@ -396,7 +398,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
       -- Case n1 = n2
       for i in 1..n1 repeat
-        if not vectorEq?(s1(i), s2(i)) then
+        if not listEq?(s1(i), s2(i)) then
           result := false
           break
 
@@ -406,13 +408,68 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
       szero? t1 or vzero? t1 => true
       szero? t2 or vzero? t2 => false
 
-      vectorOrder?(t1.vec, t2.vec) and not vectorEq?(t1.vec, t2.vec) => true
-      not vectorEq?(t1.vec, t2.vec) => false
+      listOrder?(t1.vec, t2.vec) and not listEq?(t1.vec, t2.vec) => true
+      not listEq?(t1.vec, t2.vec) => false
 
-      scalarOrder?(t1.sca, t2.sca) and not scalarEq?(t1.sca, t2.sca) => true
-      not scalarEq?(t1.sca, t2.sca) => false
+      listListOrder?(t1.sca, t2.sca) and not listListEq?(t1.sca, t2.sca) => true
+      not listListEq?(t1.sca, t2.sca) => false
 
       true
 
     termEq?(t1:Term, t2:Term) : Boolean ==
-      t1.coe = t2.coe and scalarEq?(t1.sca, t2.sca) and vectorEq?(t1.vec, t2.vec) => true
+      t1.coe = t2.coe and listListEq?(t1.sca, t2.sca) and listEq?(t1.vec, t2.vec) => true
+
+
+    coerce(x : %) : OutputForm ==
+      xx := x::Rep
+      t1 := xx(1)
+      t1.coe :: OutputForm
+
+    -- Transformation rules based on the axioms
+
+    rule01(xx:Rep) : Rep ==
+      ++ This rule implements the expansion according to the axiom
+      ++ (abc)*d = (d*a)*(b^c) + (d*b)*(c^a) + (d*c)*(a^b)
+      -- Less than 3 terms in the expression? (Why do we do this?)
+      #xx < 3 => xx
+
+      -- Not a real vector? In that case the shapes will not match anyway
+      not isVector?(xx::%) => xx
+
+      yy := sort!(termOrder?, copy(xx))
+
+      result:Rep := empty()
+
+      for tx in yy repeat
+        -- Copy terms not suitable for this rule over to the result
+        if #tx.vec ~= 1 or empty? tx.sca then
+	  result := cons(tx, result)
+
+        -- Handle terms for which the rule applies
+	else
+          scaTerms := tx.sca
+	  n := #scaTerms
+	  atp:List String := empty()
+	  rest:List List String := empty()
+
+          -- Take out the first single triple product
+	  for i in 1..n repeat
+            if #scaTerms(i) = 3 then
+       	      atp := scaTerms(i)
+	      rest := [scaTerms(j) for j in 1..n | j ~= i]
+	      break
+
+          -- Take out the first single vector
+      	  d := first tx.vec
+
+	  if #atp ~= 3 then
+            -- No triple product found, add tx to the result and terminate
+	    result := cons(tx, result)
+      	  else
+            -- There was a triple product, add the 3 terms of the axioms RHS to the result
+            t1:Term := [tx.coe, cons([d,atp(1)], rest), [atp(2),atp(3)]]
+            t2:Term := [tx.coe, cons([d,atp(2)], rest), [atp(3),atp(1)]]
+            t3:Term := [tx.coe, cons([d,atp(3)], rest), [atp(1),atp(2)]]
+      	    result := append(result, [t1,t2,t3])
+
+      result

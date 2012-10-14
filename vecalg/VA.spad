@@ -8,7 +8,7 @@
 ++ based on the techniques described in the paper
 ++ "Rule-Based Simplification in Vector-Product Spaces"
 ++ by Songxin Liang and David J. Jeffrey
-VectorSpaceCategory(R : Ring) : Category == with
+VectorSpaceCategory(R : Ring) : Category == CoercibleTo(OutputForm) with
 
     -- Addition of vectors
     "+": (%, %) -> %
@@ -89,6 +89,9 @@ VectorAlgebraCategory(R : Ring) : Category == VectorSpaceCategory(R) with
     identity?: (%, %) -> Boolean
       ++ Check if two expressions are equal in value
 
+    coerce: % -> OutputForm
+      ++
+
   add
 
     s3p(x:%, y:%, z:%) :% == (x^y) * z
@@ -106,7 +109,7 @@ VectorAlgebraCategory(R : Ring) : Category == VectorSpaceCategory(R) with
 ++ by Songxin Liang and David J. Jeffrey
 VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
-  Exports == with
+  --Exports == with
 
     --normalForm: % -> %
     -- What can we gain by exporting this?
@@ -119,10 +122,6 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
     --termOrder:
     -- What can we gain by exporting this?
       ++ Reorder the terms by the term order constructed
-
-    coerce: % -> OutputForm
-      -- Used for printing?
-
 
   Implementation == add
 
@@ -524,10 +523,53 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
     -- Output of domain elements
 
-    coerce(x : %) : OutputForm ==
+    coerce(x:%) : OutputForm ==
       xx := rep x
-      t1:Term := first xx
-      t1.vec :: OutputForm
+      o : List OutputForm := empty()
+
+      -- Loop over all terms
+      for tx in xx repeat
+        -- Coefficient part
+        if tx.coe = 1 then
+          ocoe:OutputForm := empty()
+	else
+	  ocoe:OutputForm := tx.coe::OutputForm
+
+        -- Scalar part
+        if not empty? tx.sca then
+          oscal:List OutputForm := empty()
+          for asca in tx.sca repeat
+            if #asca = 1 then
+              s1 := asca(1)::Symbol::OutputForm
+              oscal := cons(s1, oscal)
+            if #asca = 2 then
+              s1 := asca(1)::Symbol::OutputForm
+              s2 := asca(2)::Symbol::OutputForm
+	      oscal := cons(s1*s2, oscal)
+            if #asca = 3 then
+              s1 := asca(1)::Symbol::OutputForm
+              s2 := asca(2)::Symbol::OutputForm
+              s3 := asca(3)::Symbol::OutputForm
+	      oscal := cons(s1*s2*s3, oscal)
+
+          osca:OutputForm := reduce("-", oscal)
+        else
+          osca:OutputForm := empty()
+
+        -- Vector part
+        if not empty? tx.vec then
+           vecs := tx.vec
+           if #vecs = 1 then
+             ovec:OutputForm := vecs(1)::Symbol::OutputForm
+           if #vecs = 2 then
+             v1 := vecs(1)::Symbol::OutputForm
+             v2 := vecs(2)::Symbol::OutputForm
+             ovec:OutputForm := v1^v2
+        else
+          ovec:OutputForm := empty()
+
+        o := cons(ocoe * osca * ovec, o)
+      oo := reduce("+", o)
 
 
     -- Transformation rules based on the axioms

@@ -420,20 +420,39 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
     -- Addition
     (x:% + y:%) : % ==
-      zz := append(rep x, rep y)
-      per normalForm(zz)
+      isVector?(x) ~= isVector?(y) => error "Addition of non-compatible element shapes"
+
+      per normalForm append(rep x, rep y)
 
     -- Scalar times vector
     (r:R * x:%) : % ==
       xx := rep x
       zz := [ [r*tx.coe, tx.sca, tx.vec] for tx in xx ]
-      per normalForm(zz)
+      per normalForm zz
 
-    -- Scalar product of two vectors
-    (x:% * y:%) : % ==
-      xx := rep x
-      yy := rep y
+    -- Multiply two domain elements
+    scalarTimesScalar(rr:Rep, ss:Rep) : Rep ==
+      zz : Rep := empty()
 
+      for tr in rr repeat
+        for ts in ss repeat
+	  t := [tr.coe*ts.coe, append(tr.sca,ts.sca), []]@Term
+	  zz := cons(t, zz)
+
+      normalForm zz
+
+    scalarTimesVector(ss:Rep, vv:Rep) : Rep ==
+      zz : Rep := empty()
+
+      for ts in ss repeat
+        for tv in vv repeat
+	  t := [ts.coe*tv.coe, append(ts.sca,tv.sca), tv.vec]@Term
+	  zz := cons(t, zz)
+
+      normalForm zz
+
+    -- Scalar or dot-product of two vectors
+    vectorTimesVector(xx:Rep, yy:Rep) : Rep ==
       zz : Rep := empty()
 
       for tx in xx repeat
@@ -442,38 +461,58 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
         for ty in yy repeat
           ny:INT := # ty.vec
 
-          -- TODO: I'd like to use a else-if structure here, but it becomes too clumpsy! maybe try using "iterate"
           vx := tx.vec
           vy := ty.vec
 
           if nx = 1 and ny = 1 then
             scap := cons([vx(1),vy(1)], append(tx.sca,ty.sca))
             m := [tx.coe * ty.coe, scap, []]@Term
-            zz := cons(m,zz)
+            zz := cons(m, zz)
 
-          if nx = 1 and ny = 2 then
+          else if nx = 1 and ny = 2 then
             scap := cons([vx(1),vy(1),vy(2)], append(tx.sca,ty.sca))
             m := [tx.coe*ty.coe, scap, []]@Term
-            zz := cons(m,zz)
+            zz := cons(m, zz)
 
-          if nx = 2 and ny = 1 then
+          else if nx = 2 and ny = 1 then
             scap := cons([vx(1),vx(2),vy(1)], append(tx.sca,ty.sca))
             m := [tx.coe*ty.coe, scap, []]@Term
-            zz := cons(m,zz)
+            zz := cons(m, zz)
 
-          if nx = 2 and ny = 2 then
+          else if nx = 2 and ny = 2 then
             coep := tx.coe * ty.coe
             scap1 := [[vx(1),vy(1)], [vx(2),vy(2)]]
             scap2 := [[vx(1),vy(2)], [vx(2),vy(1)]]
             m1 := [coep, append(scap1,append(tx.sca,ty.sca)), []]@Term
             m2 := [(-1)*coep, append(scap2,append(tx.sca,ty.sca)), []]@Term
-            zz := cons(m2, cons(m1,zz))
+            zz := append(zz, [m1, m2])
 
-      zz := normalForm reverse! zz
-      per zz
+      normalForm zz
 
-    -- Cross product of two vectors
+    -- Dispatch * operator of two domain elements depending on element shape
+    (x:% * y:%) : % ==
+      xx := rep x
+      yy := rep y
+      tex := isVector?(x)
+      tey := isVector?(y)
+
+      not tex and not tey =>
+        per scalarTimesScalar(xx, yy)
+
+      tex and not tey =>
+        per scalarTimesVector(yy, xx)
+
+      not tex and tey =>
+        per scalarTimesVector(xx, yy)
+
+      tex and tey =>
+        per vectorTimesVector(yy, xx)
+
+
+    -- Wedge or cross-product of two vectors
     (x:% ^ y:%) :% ==
+      not isVector?(x) or not isVector?(y) => error "Wedge product can not contain scalar elements"
+
       xx := rep x
       yy := rep y
 
@@ -485,7 +524,6 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
         for ty in yy repeat
           ny:INT := # ty.vec
 
-          -- TODO: I'd like to use a else-if structure here, but it becomes too clumpsy! try using "iterate"
           vx := tx.vec
           vy := ty.vec
 
@@ -493,7 +531,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
             m := [tx.coe*ty.coe, append(tx.sca,ty.sca), append(tx.vec,ty.vec)]@Term
             zz := cons(m, zz)
 
-          if nx = 1 and ny = 2 then
+          else if nx = 1 and ny = 2 then
             coep := tx.coe * ty.coe
             scap1 := cons([vx(1),vy(2)], append(tx.sca,ty.sca))
             scap2 := cons([vx(1),vy(1)], append(tx.sca,ty.sca))
@@ -501,7 +539,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
             m2 := [(-1)*coep, scap2, [vy(2)]]@Term
             zz := append(zz, [m1, m2])
 
-          if nx = 2 and ny = 1 then
+          else if nx = 2 and ny = 1 then
             coep := tx.coe * ty.coe
             scap1 := cons([vx(1),vy(1)], append(tx.sca,ty.sca))
             scap2 := cons([vx(2),vy(1)], append(tx.sca,ty.sca))
@@ -509,7 +547,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
             m2 := [(-1)*coep, scap2, [vx(1)]]@Term
             zz := append(zz, [m1, m2])
 
-          if nx = 2 and ny = 2 then
+          else if nx = 2 and ny = 2 then
             coep := tx.coe * ty.coe
             scap1 := cons([vx(1),vx(2),vy(2)], append(tx.sca,ty.sca))
             scap2 := cons([vx(1),vx(2),vy(1)], append(tx.sca,ty.sca))
@@ -517,8 +555,12 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
             m2 := [(-1)*coep, scap2, [vy(2)]]@Term
             zz := append(zz, [m1, m2])
 
-      zz := normalForm reverse! zz
-      per zz
+      per normalForm zz
+
+
+    -- Equivalence of vector expressions
+    (x:% = y:%) : Boolean ==
+      identity?(x, y)
 
 
     -- Output of domain elements

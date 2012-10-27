@@ -747,10 +747,10 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
           -- Take out the first dot and triple product
           for i in 1..n repeat
-            if #scaTerms(i) = 2 then
+            if not founddp and #scaTerms(i) = 2 then
               adp := scaTerms(i)
               founddp := true
-            else if #scaTerms(i) = 3 then
+            else if not foundtp and #scaTerms(i) = 3 then
               atp := scaTerms(i)
               foundtp := true
             else

@@ -1,0 +1,61 @@
+va := vector(va)$VA(INT)
+vb := vector(vb)$VA(INT)
+vc := vector(vc)$VA(INT)
+v0 := vectorZero()$VA(INT)
+s0 := scalarZero()$VA(INT)
+
+-va
+
+-va + va
+
+va + vb
+
+va + vb + vc
+
+
+va * va
+
+va * vb
+
+
+va * vb * vc
+
+va * (vb * vc)
+
+(va * vb) * vc
+
+
+isScalar? s0
+isVector? s0
+
+isScalar? v0
+isVector? v0
+
+
+cr := va ^ vb
+isVector? cr
+
+
+s := s3p(va, vb, vc)
+isScalar? s
+
+
+simplify s0
+
+simplify v0
+
+simplify( v0*v0 )
+
+simplify( v0^v0 )
+
+simplify( va - va )
+
+simplify( va + va )
+
+simplify( va*va )
+
+simplify( va^va )
+
+simplify( va^vb+vb^va )
+
+simplify( va^vb-vb^va )

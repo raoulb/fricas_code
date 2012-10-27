@@ -164,7 +164,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
     vector(x:Symbol) : % == per [ [1::R, [], [string x]] ]
 
 
-    -- Check a term for beeing zero
+    -- Check a term for being zero
 
     szero?(x:Term) : Boolean ==
       -- Coefficient is zero and there is no vector part
@@ -178,16 +178,16 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
       -- But what about scalar part: scalar part could be zero
       -- if it contains a scalar product of orthogonal vectors.
       -- But: we can not make any assumptions on abstract vectors yet!
-      empty? x.vec or (x.coe = 0 and ~empty? x.vec)
+      ~empty? x.vec and (x.coe = 0 or (x.vec)(1) = "0")
       -- What about x.vec beeing a zero?
       -- Or a vector product with one factor a zero?
 
     zero?(x:%) : Boolean ==
-      -- Buggy because of the above issues!
       xx := rep x
       result := true
       for tx in xx repeat
-        not szero? tx or not vzero? tx => false
+        not szero? tx and not vzero? tx => result := false
+      result
 
 
     -- Check shapes
@@ -314,7 +314,11 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
     termEq?(t1:Term, t2:Term) : Boolean ==
       t1.coe = t2.coe and listListEq?(t1.sca, t2.sca) and listEq?(t1.vec, t2.vec) => true
 
+    scalarPartEq?(t1:Term, t2:Term) : Boolean ==
+      listListEq?(t1.sca, t2.sca)
 
+    vectorPartEq?(t1:Term, t2:Term) : Boolean ==
+      listEq?(t1.vec, t2.vec)
 
 
     -- Bring the vector expression into a normal form
@@ -331,15 +335,6 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
       --   combine same terms
       -- return y
 
-      -- TODO: Check for zeros:
-      --         coe = 0
-      --         sca is zero
-      --         vec is zero
-      --       We have
-      --         a^a -> 0 and 0^a -> 0 and a^0 -> 0
-      --         (aab) -> 0 and (abb) -> 0 and no check for (aba) because of sorting
-      --       With assumption we could also do
-      --         a*b -> 0 for a _|_ b
       result : Rep := empty()
 
       for tx in xx repeat
@@ -352,34 +347,20 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
         for sp in scaParts repeat
           if #sp = 1 then
-            -- A single scalar part (how to obtain?)
+            -- A single scalar part
             nsp := cons(sp, nsp)
 
-          if #sp = 2 then
+          else if #sp = 2 then
             -- A scalar product
             -- Axiom 2.2 applies: a*b = b*a
-            tmp := copy sp
-            nsp := cons(sort(tmp), nsp)
+            nsp := cons(sort(sp), nsp)
 
-          if #sp = 3 then
+          else if #sp = 3 then
             -- A scalar triple product
-            tmp := copy sp
-            -- A small bubble sort, overkill but useful
-            -- Counting version
-            -- bubbleSort: (A, (S,S)->Boolen) -> (A, INT)
-            -- should go into library (sortpack)!
-            wasordered := false
-            exchanges : INT := 0
-            while not wasordered repeat
-                wasordered := true
-                for i in 1..#tmp-1 repeat
-                    if tmp.i > tmp.(i+1) then
-                        t := tmp.i; tmp.i := tmp.(i+1); tmp.(i+1) := t
-                        exchanges := exchanges + 1
-                        wasordered := false
-
-            nsp := cons(tmp, nsp)
-            if odd? exchanges then nt.coe := -nt.coe
+            -- Axiom 2.3 applies: [abc] = [bca] = [cab] = -[acb] = -[cba] = -[bac]
+            r := countingBubbleSort(sp)$SortPackage(String, List(String))
+            nsp := cons(r.sorted, nsp)
+            if odd? r.exchanges then nt.coe := -nt.coe
 
         -- Sort the scalar parts
         nt.sca := sort(listOrder?, nsp)
@@ -392,14 +373,12 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
           -- A single vector part
           nvp := vp
 
-        if #vp = 2 then
+        else if #vp = 2 then
           -- A vector product
           -- Axiom 2.2 applies: a^b = -b^a
-          if vp(1) > vp(2) then
-            nvp := [vp(2), vp(1)]
-            nt.coe := -nt.coe
-          else
-            nvp := copy vp
+          r := countingBubbleSort(vp)$SortPackage(String, List(String))
+          nvp := r.sorted
+          if odd? r.exchanges then nt.coe := -nt.coe
 
         nt.vec := nvp
 
@@ -436,8 +415,8 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
       for tr in rr repeat
         for ts in ss repeat
-	  t := [tr.coe*ts.coe, append(tr.sca,ts.sca), []]@Term
-	  zz := cons(t, zz)
+          t := [tr.coe*ts.coe, append(tr.sca,ts.sca), []]@Term
+          zz := cons(t, zz)
 
       normalForm zz
 
@@ -446,8 +425,8 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
       for ts in ss repeat
         for tv in vv repeat
-	  t := [ts.coe*tv.coe, append(ts.sca,tv.sca), tv.vec]@Term
-	  zz := cons(t, zz)
+          t := [ts.coe*tv.coe, append(ts.sca,tv.sca), tv.vec]@Term
+          zz := cons(t, zz)
 
       normalForm zz
 
@@ -574,8 +553,8 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
         -- Coefficient part
         if tx.coe = 1 then
           ocoe:OutputForm := empty()
-	else
-	  ocoe:OutputForm := tx.coe::OutputForm
+        else
+          ocoe:OutputForm := tx.coe::OutputForm
 
         -- Scalar part
         if not empty? tx.sca then
@@ -587,12 +566,12 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
             if #asca = 2 then
               s1 := asca(1)::Symbol::OutputForm
               s2 := asca(2)::Symbol::OutputForm
-	      oscal := cons(s1*s2, oscal)
+              oscal := cons(s1*s2, oscal)
             if #asca = 3 then
               s1 := asca(1)::Symbol::OutputForm
               s2 := asca(2)::Symbol::OutputForm
               s3 := asca(3)::Symbol::OutputForm
-	      oscal := cons(s1*s2*s3, oscal)
+              oscal := cons(s1*s2*s3, oscal)
 
           osca:OutputForm := reduce("-", oscal)
         else
@@ -612,6 +591,69 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
         o := cons(ocoe * osca * ovec, o)
       oo := reduce("+", o)
+
+    -- Simple transformation
+
+    combineTerms(xx:Rep) : Rep ==
+      -- NOTE: Still incomplete
+      result:Rep := empty()
+
+      for i in 2..#xx repeat
+        ta := xx(i-1)
+        tb := xx(i)
+
+        if scalarPartEq?(ta,tb) and vectorPartEq?(ta,tb) then
+          ca := ta.coe
+          cb := tb.coe
+          tnew:Term := [ca+cb, ta.sca, ta.vec]@Term
+          result := cons(tnew, result)
+          i := i+1
+        else
+          -- Append ta to the result but not yet tb
+          -- There is a change tb will be combined later
+          result := cons(ta, result)
+
+      result
+
+
+    removeZeroes(xx:Rep) : Rep ==
+      -- Check for and remove zeroes:
+      --   coe = 0
+      --   sca is zero
+      --   vec is zero
+      -- We have
+      --   a^a -> 0 and 0^a -> 0 and a^0 -> 0
+      --   (aab) -> 0 and (abb) -> 0 and (aba) -> 0
+      -- With assumptions we could also do
+      --   a*b -> 0 for a _|_ b
+      result : Rep := empty()
+
+      for tx in xx repeat
+        szero? tx => "iterate"
+        vzero? tx => "iterate"
+
+        -- Axiom: a^a = 0
+        vp := tx.vec
+        #vp = 2 and vp(1) = vp(2) => "iterate"
+
+        -- Axiom: (a,a,b) = (a,b,a) = (b,a,a) = 0
+        --sp := tx.sca
+        tpzero : Boolean := false
+        for s in tx.sca repeat
+          if #s = 3 then
+            s(1) = s(2) or s(1) = s(3) or s(2) = s(3) => tpzero := true
+
+        tpzero => "iterate"
+
+        -- Term contains no known zeros
+        result := cons(tx, result)
+
+      -- No terms left? Construct a single zero
+      if empty? result then
+        isScalar?(per xx) => result := rep scalarZero()
+        isVector?(per xx) => result := rep vectorZero()
+
+      result
 
 
     -- Transformation rules based on the axioms
@@ -723,3 +765,13 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
             result := append(result, [t1,t2,t3,t4,t5,t6])
 
       result
+
+
+
+
+
+    simplify(x:%) : % ==
+      xx := normalForm(rep x)
+      xx := combineTerms(xx)
+      xx := removeZeroes(rep x)
+      per xx

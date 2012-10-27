@@ -1,0 +1,87 @@
+-- This file shows some really nontrivial examples
+--
+-- Source: "A Rule-Based Component-Free Vector Algebra Package" by Songxin Liang
+--
+-- Individual examples:
+-- J. Cunningham. "Vectors", Heinemann Educational Books Ltd, London, 1969
+-- E. M. Patterson, "Solving Problems in Vector Algebra", Oliver & Boyd Ltd, Edinburgh-London, 1968
+-- D. R. Stoutemyer, "Symbolic computer vector analysis", Computers & Mathematics with Applications, 1979
+
+va := vector(a)$VA(INT)
+vb := vector(b)$VA(INT)
+vc := vector(c)$VA(INT)
+vd := vector(d)$VA(INT)
+ve := vector(e)$VA(INT)
+vf := vector(f)$VA(INT)
+
+
+-- Stoutemyer
+x := ((va^vb)^(vb^vc))*(vc^va) - (va*(vb^vc))*(va*(vb^vc))
+zero?(x)
+xs := simplify(x)
+zero?(xs)
+isScalar?(x)
+isScalar?(xs)
+
+
+x := (va-vd)^(vb-vc) + (vb-vd)^(vc-va) + (vc-vd)^(va-vb) - 2*(va^vb + vb^vc + vc^va)
+zero?(x)
+xs := simplify(x)
+zero?(xs)
+isVector?(x)
+isVector?(xs)
+
+
+x := (vb^vc)^(va^vd) + (vc^va)^(vb^vd) + (va^vb)^(vc^vd) + 2*s3p(va,vb,vc)*vd
+zero?(x)
+xs := simplify(x)
+zero?(xs)
+-- still not zero. At this point we need the power of rules
+-- Of course this should be included into simplify later.
+xss := applyRule(xs, "rule28")
+zero?(xss)
+xsss := simplify(xss)
+zero?(xsss)
+isVector?(x)
+isVector?(xs)
+isVector?(xss)
+isVector?(xsss)
+
+
+-- Cunningham
+x := va^(vb^vc) + vb^(vc^va) + vc^(va^vb)
+zero?(x)
+xs := simplify(x)
+zero?(xs)
+isVector?(x)
+isVector?(xs)
+
+
+-- This IS an identity
+lhs := va^(vb^(vc^vd)) + vb^(vc^(vd^va)) + vc^(vd^(va^vb)) + vd^(va^(vb^vc))
+rhs := (va^vc)^(vb^vd)
+identity?(lhs, rhs)
+-- Try to simplify first
+slhs := simplify(lhs)
+srhs := simplify(rhs)
+identity?(slhs, srhs)
+-- Ok, enough for the moment
+-- We would need inverse of rule28 to finish
+-- Of course identity will employ full simplification later.
+
+
+--  Patterson
+x := (vb^vc)*(va^vd) + (vc^va)*(vb^vd) + (va^vb)*(vc^vd)
+zero?(x)
+xs := simplify(x)
+zero?(xs)
+isScalar?(x)
+isScalar?(xs)
+
+
+x := ((va^vb)^vc)^vd + ((vb^va)^vd)^vc + ((vc^vd)^va)^vb + ((vd^vc)^vb)^va
+zero?(x)
+xs := simplify(x)
+zero?(xs)
+isVector?(x)
+isVector?(xs)

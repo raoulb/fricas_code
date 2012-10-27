@@ -1,9 +1,13 @@
-va := vector(va)$VA(INT)
-vb := vector(vb)$VA(INT)
-vc := vector(vc)$VA(INT)
+va := vector(a)$VA(INT)
+vb := vector(b)$VA(INT)
+vc := vector(c)$VA(INT)
+vd := vector(d)$VA(INT)
+ve := vector(e)$VA(INT)
+vf := vector(f)$VA(INT)
 v0 := vectorZero()$VA(INT)
 s0 := scalarZero()$VA(INT)
 
+-- Test some simple arithmetic
 -va
 
 -va + va
@@ -24,38 +28,96 @@ va * (vb * vc)
 
 (va * vb) * vc
 
-
+-- Properties
 isScalar? s0
 isVector? s0
 
 isScalar? v0
 isVector? v0
 
+isScalar? va
+isVector? va
 
-cr := va ^ vb
-isVector? cr
+isScalar?(va*vb)
+isVector?(va*vb)
 
+isScalar?(va^vb)
+isVector?(va^vb)
 
-s := s3p(va, vb, vc)
-isScalar? s
+isScalar? s3p(va, vb, vc)
+isVector? s3p(va, vb, vc)
 
-
+-- Basic simplification
 simplify s0
-
 simplify v0
 
-simplify( v0*v0 )
+simplify(va + va)
+simplify(va + vb)
+simplify(va + vb + vc)
+simplify(va + vb +va + vb + va)
+simplify(va - va)
+simplify(va - vb)
+simplify(vb - va)
 
-simplify( v0^v0 )
+simplify(v0*v0)
+simplify(v0^v0)
 
-simplify( va - va )
+simplify(v0*va)
+simplify(v0^va)
+simplify(va^v0)
 
-simplify( va + va )
+simplify(va*va)
+simplify(va*vb)
 
-simplify( va*va )
+simplify(va^va)
+simplify(va^vb)
+simplify(vb^va)
 
-simplify( va^va )
+simplify(va^vb + vb^va)
+simplify(va^vb - vb^va)
 
-simplify( va^vb+vb^va )
+-- Axioms
+simplify(va^va)
 
-simplify( va^vb-vb^va )
+simplify(va*vb)
+simplify(vb*va)
+
+simplify(va^vb)
+simplify(-vb^va)
+
+simplify(s3p(va,vb,vc))
+simplify(s3p(vb,vc,va))
+simplify(s3p(vc,va,vb))
+simplify(-s3p(va,vc,vb))
+simplify(-s3p(vb,va,vc))
+simplify(-s3p(vc,vb,va))
+
+simplify(s3p(va,va,vb))
+simplify(s3p(va,vb,vb))
+simplify(s3p(va,vb,va))
+
+x := simplify(va^(vb^vc))
+y := simplify((va*vc)*vb - (va*vb)*vc)
+simplify(x-y)
+
+x := simplify((va^vb)*(vc^vd))
+y := simplify((va*vc)*(vb*vd) - (va*vd)*(vb*vc))
+simplify(x-y)
+
+x := simplify((va^vb)^(vc^vd))
+y := simplify(s3p(va,vb,vd)*vc -s3p(va,vb,vc)*vd)
+simplify(x-y)
+
+-- 2.8
+simplify(s3p(va,vb,vc)*vd)
+
+-- 2.9
+simplify(s3p(va,vb,vc)*(vd^ve))
+--simplify((vd^ve)*s3p(va,vb,vc))
+
+-- 2.10
+simplify((vd*ve)*s3p(va,vb,vc))
+--simplify(s3p(va,vb,vc)*(vd*ve))
+
+-- 2.11
+simplify(s3p(va,vb,vc)*s3p(vd,ve,vf))

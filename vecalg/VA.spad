@@ -126,6 +126,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
   Implementation == add
 
     INT ==> Integer
+    NNI ==> NonNegativeInteger
 
     rep x ==> (x@%) pretend Rep
     per x ==> (x@Rep) pretend %
@@ -590,30 +591,38 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
           ovec:OutputForm := empty()
 
         o := cons(ocoe * osca * ovec, o)
-      oo := reduce("+", o)
+      if ~empty? o then
+        oo := reduce("+", o)
+      else
+        oo := "?"::OutputForm
+      oo
 
     -- Simple transformation
 
     combineTerms(xx:Rep) : Rep ==
-      -- NOTE: Still incomplete
       result:Rep := empty()
+      n : NNI := #xx
+      i : NNI := 1
 
-      for i in 2..#xx repeat
-        ta := xx(i-1)
-        tb := xx(i)
+      while i <= n repeat
+        -- Current term
+        ta := xx(i)
+        cnew := ta.coe
 
-        if scalarPartEq?(ta,tb) and vectorPartEq?(ta,tb) then
-          ca := ta.coe
-          cb := tb.coe
-          tnew:Term := [ca+cb, ta.sca, ta.vec]@Term
-          result := cons(tnew, result)
-          i := i+1
-        else
-          -- Append ta to the result but not yet tb
-          -- There is a change tb will be combined later
-          result := cons(ta, result)
+        -- Collect all following terms that are equal to current
+        j : NNI := i + 1
+        while j <= n and scalarPartEq?(ta, xx(j)) and vectorPartEq?(ta, xx(j)) repeat
+          cnew := cnew + xx(j).coe
+          j := j + 1
 
-      result
+        -- Combine and append
+        tnew:Term := [cnew, ta.sca, ta.vec]@Term
+        result := cons(tnew, result)
+
+        -- Continue with the first non-equal term
+        i := j
+
+      reverse! result
 
 
     removeZeroes(xx:Rep) : Rep ==
@@ -653,7 +662,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
         isScalar?(per xx) => result := rep scalarZero()
         isVector?(per xx) => result := rep vectorZero()
 
-      result
+      reverse! result
 
 
     -- Transformation rules based on the axioms
@@ -773,5 +782,5 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
     simplify(x:%) : % ==
       xx := normalForm(rep x)
       xx := combineTerms(xx)
-      xx := removeZeroes(rep x)
+      xx := removeZeroes(xx)
       per xx

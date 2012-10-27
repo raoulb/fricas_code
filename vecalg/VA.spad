@@ -92,6 +92,8 @@ VectorAlgebraCategory(R : Ring) : Category == VectorSpaceCategory(R) with
     coerce: % -> OutputForm
       ++
 
+    applyRule: (%, String) -> %
+
   add
 
     s3p(x:%, y:%, z:%) :% == (x^y) * z
@@ -109,10 +111,9 @@ VectorAlgebraCategory(R : Ring) : Category == VectorSpaceCategory(R) with
 ++ by Songxin Liang and David J. Jeffrey
 VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
-  --Exports == with
+  Exports == with
 
-    --normalForm: % -> %
-    -- What can we gain by exporting this?
+    normalize: % -> %
       ++ Bring the vector expression into a normal form
       ++ of type [coef, sca, vec]
       ++ Example of a normal form:
@@ -122,6 +123,9 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
     --termOrder:
     -- What can we gain by exporting this?
       ++ Reorder the terms by the term order constructed
+
+    --applyRule: (%, String) -> %
+
 
   Implementation == add
 
@@ -193,13 +197,6 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
     -- Check shapes
 
-    isScalar?(x:%) : Boolean ==
-      xx := rep x
-      result := true
-      for tx in xx repeat
-        not empty? tx.vec => result := false
-      result
-
     -- Check if an expression is a true vector (possibly zero)
     -- or just a scalar expression. Examples for single terms:
     -- [a, [], []]  scalar
@@ -212,13 +209,21 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
     -- [a, [...], [v]]  vector
     -- [a, [...], [v, w]]  vector
     -- [0, [...], [u, v, w]]  vector? (triple product evaluated result in scalar!)
+
+    isScalar?(x:%) : Boolean ==
+      xx := rep x
+      empty? xx => false
+      result := true
+      -- Search if there is a term which is not a scalar
+      for tx in xx repeat
+        not empty? tx.vec => (result := false)
+      result
+
     isVector?(x:%) : Boolean ==
       xx := rep x
-      -- Empty expression / normal form
       empty? xx => false
-      -- We can only sum up compatible terms in the normal form
-      -- hence search if there is a term which is not a vector
-      result :Boolean := true
+      -- Search if there is a term which is not a vector
+      result := true
       for tx in xx repeat
         empty? tx.vec => (result := false)
       result
@@ -330,10 +335,10 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
     normalForm(xx:Rep) : Rep ==
       -- for all tx in xx
       --   make scalar part and vector part in ascending order
-      --   use transformation rules to check for zero
+      --   use transformation rules to check for zero (not here)
       --   collect non-zero terms in yy
       --   make yy in ascending order
-      --   combine same terms
+      --   combine same terms (not here)
       -- return y
 
       result : Rep := empty()
@@ -387,13 +392,11 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
         result := cons(nt, result)
 
       -- Sort the terms in the result
-      result := sort(termOrder?, result)
+      result := sort!(termOrder?, result)
 
 
-    -- Do we really want to make this available, for what?
-    -- Issue: makes "something" looping
-    --normalForm(x:%) : % ==
-    --  normalForm(x::Rep)::%
+    normalize(x:%) : % ==
+      per normalForm(rep x)
 
 
     -- Implementation of algebraic operations
@@ -401,7 +404,6 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
     -- Addition
     (x:% + y:%) : % ==
       isVector?(x) ~= isVector?(y) => error "Addition of non-compatible element shapes"
-
       per normalForm append(rep x, rep y)
 
     -- Scalar times vector
@@ -543,61 +545,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
       identity?(x, y)
 
 
-    -- Output of domain elements
-
-    coerce(x:%) : OutputForm ==
-      xx := rep x
-      o : List OutputForm := empty()
-
-      -- Loop over all terms
-      for tx in xx repeat
-        -- Coefficient part
-        if tx.coe = 1 then
-          ocoe:OutputForm := empty()
-        else
-          ocoe:OutputForm := tx.coe::OutputForm
-
-        -- Scalar part
-        if not empty? tx.sca then
-          oscal:List OutputForm := empty()
-          for asca in tx.sca repeat
-            if #asca = 1 then
-              s1 := asca(1)::Symbol::OutputForm
-              oscal := cons(s1, oscal)
-            if #asca = 2 then
-              s1 := asca(1)::Symbol::OutputForm
-              s2 := asca(2)::Symbol::OutputForm
-              oscal := cons(s1*s2, oscal)
-            if #asca = 3 then
-              s1 := asca(1)::Symbol::OutputForm
-              s2 := asca(2)::Symbol::OutputForm
-              s3 := asca(3)::Symbol::OutputForm
-              oscal := cons(s1*s2*s3, oscal)
-
-          osca:OutputForm := reduce("-", oscal)
-        else
-          osca:OutputForm := empty()
-
-        -- Vector part
-        if not empty? tx.vec then
-           vecs := tx.vec
-           if #vecs = 1 then
-             ovec:OutputForm := vecs(1)::Symbol::OutputForm
-           if #vecs = 2 then
-             v1 := vecs(1)::Symbol::OutputForm
-             v2 := vecs(2)::Symbol::OutputForm
-             ovec:OutputForm := v1^v2
-        else
-          ovec:OutputForm := empty()
-
-        o := cons(ocoe * osca * ovec, o)
-      if ~empty? o then
-        oo := reduce("+", o)
-      else
-        oo := "?"::OutputForm
-      oo
-
-    -- Simple transformation
+    -- Simple transformations
 
     combineTerms(xx:Rep) : Rep ==
       result:Rep := empty()
@@ -666,19 +614,16 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
 
     -- Transformation rules based on the axioms
+    -- First part are expansion rules
 
-    rule01(xx:Rep) : Rep ==
+    rule28(x:Rep) : Rep ==
       ++ This rule implements the expansion according to the axiom
       ++ (abc)*d = (d*a)*(b^c) + (d*b)*(c^a) + (d*c)*(a^b)
-      -- Less than 3 terms in the expression? (Why do we do this?)
-      #xx < 3 => xx
-
       -- Not a real vector? In that case the shapes will not match anyway
-      not isVector?(per xx) => xx
+      not isVector?(per x) => x
 
-      yy := sort!(termOrder?, copy(xx))
-
-      result:Rep := empty()
+      yy := normalForm(x)
+      result : Rep := empty()
 
       for tx in yy repeat
         -- Copy terms not suitable for this rule over to the result
@@ -687,22 +632,24 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
         -- Handle terms for which the rule applies
         else
+          found := false
           scaTerms := tx.sca
           n := #scaTerms
-          atp:List String := empty()
-          others:List List String := empty()
+          atp : List String := empty()
+          others : List List String := empty()
 
           -- Take out the first single triple product
           for i in 1..n repeat
             if #scaTerms(i) = 3 then
               atp := scaTerms(i)
               others := [scaTerms(j) for j in 1..n | j ~= i]
+              found := true
               break
 
           -- Take out the first single vector
           d := first tx.vec
 
-          if #atp ~= 3 then
+          if not found then
             -- No triple product found, add tx to the result and terminate
             result := cons(tx, result)
           else
@@ -712,10 +659,10 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
             t3:Term := [tx.coe, cons([d,atp(3)], others), [atp(1),atp(2)]]
             result := append(result, [t1,t2,t3])
 
-      result
+      normalForm result
 
 
-    rule02(xx:Rep) : Rep ==
+    rule29(x:Rep) : Rep ==
       ++ This rule implements the expansion according to the axiom
       ++ (abc)*(d^h) = ((b^c)*(d^h))*a + ((c^a)*(d^h))*b + ((a^b)*(d^h))*c
       ++             =   ( (b*d)*(c*h) - (b*h)*(c*d) ) * a
@@ -724,15 +671,11 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
       ++             =   (b*d)*(c*h)*a - (b*h)*(c*d)*a
       ++               + (c*d)*(a*h)*b - (c*h)*(a*d)*b
       ++               + (a*d)*(b*h)*c - (a*h)*(b*d)*c
-      -- Less than 3 terms in the expression? (Why do we do this?)
-      #xx < 3 => xx
-
       -- Not a real vector? In that case the shapes will not match anyway
-      not isVector?(per xx) => xx
+      not isVector?(per x) => x
 
-      yy := sort!(termOrder?, copy(xx))
-
-      result:Rep := empty()
+      yy := normalForm(x)
+      result : Rep := empty()
 
       for tx in yy repeat
         -- Copy terms not suitable for this rule over to the result
@@ -741,23 +684,25 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
         -- Handle terms for which the rule applies
         else
+          found := false
           scaTerms := tx.sca
           n := #scaTerms
           atp:List String := empty()
           others:List List String := empty()
 
-          -- Take out the first single triple product
+          -- Take out the first triple product
           for i in 1..n repeat
             if #scaTerms(i) = 3 then
               atp := scaTerms(i)
               others := [scaTerms(j) for j in 1..n | j ~= i]
+              found := true
               break
 
-          -- Take out the first two single vectors
+          -- Take out the cross vectors
           d := first tx.vec
           h := second tx.vec
 
-          if #atp ~= 3 then
+          if not found then
             -- No triple product found, add tx to the result and terminate
             result := cons(tx, result)
           else
@@ -773,14 +718,197 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
             t6:Term := [-tx.coe, append(others, [[a,h], [b,d]]), [c]]
             result := append(result, [t1,t2,t3,t4,t5,t6])
 
-      result
+      normalForm result
 
 
+    rule210(x:Rep) : Rep ==
+      ++ This rule implements the expansion according to the axiom
+      ++ (d*h)(abc) = (d*a)(hbc) + (d*b)(ahc) + (d*c)(abh)
+      -- Not a scalar? In that case the shapes will not match anyway
+      not isScalar?(per x) => x
+
+      yy := normalForm(x)
+      result : Rep := empty()
+
+      for tx in yy repeat
+        -- Copy terms not suitable for this rule over to the result
+        if not empty? tx.vec or empty? tx.sca then
+          result := cons(tx, result)
+
+        -- Handle terms for which the rule applies
+        else
+          founddp := false
+          foundtp := false
+          scaTerms := tx.sca
+          n := #scaTerms
+          adp : List String := empty()
+          atp : List String := empty()
+          others : List List String := empty()
+
+          -- Take out the first dot and triple product
+          for i in 1..n repeat
+            if #scaTerms(i) = 2 then
+              adp := scaTerms(i)
+              founddp := true
+            else if #scaTerms(i) = 3 then
+              atp := scaTerms(i)
+              foundtp := true
+            else
+	      others := cons(scaTerms(i), others)
+
+          if not founddp or not foundtp  then
+            -- No dot or triple product found, add tx to the result and terminate
+            result := cons(tx, result)
+          else
+            -- There were dot and triple products, add the 3 terms of the axioms RHS to the result
+            a := atp(1)
+            b := atp(2)
+            c := atp(3)
+            d := adp(1)
+            h := adp(2)
+            t1:Term := [tx.coe, append(others, [[d,a],[h,b,c]]), []]
+            t2:Term := [tx.coe, append(others, [[d,b],[a,h,c]]), []]
+            t3:Term := [tx.coe, append(others, [[d,c],[a,b,h]]), []]
+            result := append(result, [t1,t2,t3])
+
+      normalForm result
 
 
+    rule211(x:Rep) : Rep ==
+      ++ This rule implements the expansion according to the axiom
+      ++ (abc)(dgh) = ((b^c)*(d^g))(a*h) + ((c^a)*(d^g))(b*h) + ((a^b)*(d^g))(c*h)
+      ++            =   ((b*d)(c*g) - (b*g)(c*d)) (a*h)
+      ++              + ((c*d)(a*g) - (c*g)(a*d)) (b*h)
+      ++              + ((a*d)(b*g) - (a*g)(b*d)) (c*h)
+      ++            =   (b*d)(c*g)(a*h) - (b*g)(c*d)(a*h)
+      ++              + (c*d)(a*g)(b*h) - (c*g)(a*d)(b*h)
+      ++              + (a*d)(b*g)(c*h) - (a*g)(b*d)(c*h)
+      -- Not a scalar? In that case the shapes will not match anyway
+      not isScalar?(per x) => x
+
+      yy := normalForm(x)
+      result : Rep := empty()
+
+      for tx in yy repeat
+        -- Copy terms not suitable for this rule over to the result
+        if not empty? tx.vec or empty? tx.sca then
+          result := cons(tx, result)
+
+        -- Handle terms for which the rule applies
+        else
+          scaTerms := tx.sca
+          n := #scaTerms
+          tps : List List String := empty()
+          others : List List String := empty()
+
+          -- Take out the first two triple products
+          for i in 1..n repeat
+            if #scaTerms(i) = 3 and #tps < 2 then
+              tps := cons(scaTerms(i), tps)
+            else
+	      others := cons(scaTerms(i), others)
+
+          if #tps < 2  then
+            -- No triple product(s) found, add tx to the result and terminate
+            result := cons(tx, result)
+          else
+            -- There were two triple products, add the 6 terms of the axioms RHS to the result
+            tp1 := tps(1)
+            tp2 := tps(2)
+            a := tp1(1)
+            b := tp1(2)
+            c := tp1(3)
+            d := tp2(1)
+            g := tp2(2)
+            h := tp2(3)
+            t1:Term := [ tx.coe, append(others, [[b,d],[c,g],[a,h]]), []]
+            t2:Term := [-tx.coe, append(others, [[b,g],[c,d],[a,h]]), []]
+            t3:Term := [ tx.coe, append(others, [[c,d],[a,g],[b,h]]), []]
+            t4:Term := [-tx.coe, append(others, [[c,g],[a,d],[b,h]]), []]
+            t5:Term := [ tx.coe, append(others, [[a,d],[b,g],[c,h]]), []]
+            t6:Term := [-tx.coe, append(others, [[a,g],[b,d],[c,h]]), []]
+            result := append(result, [t1,t2,t3,t4,t5,t6])
+
+      normalForm result
+
+
+    -- Simplification routines
 
     simplify(x:%) : % ==
       xx := normalForm(rep x)
       xx := combineTerms(xx)
       xx := removeZeroes(xx)
       per xx
+
+
+    identity?(x:%, y:%) : Boolean ==
+      zero? simplify(x-y)
+
+
+    -- Apply specific rules to the given expression
+
+    applyRule(x:%, rule:String) : % ==
+      ++ Central rule dispatcher
+      --(rule="rule01")@Boolean => per rule01(rep x)
+      --(rule="rule02")@Boolean => per rule02(rep x)
+      (rule="rule28")@Boolean => per rule28(rep x)
+      (rule="rule29")@Boolean => per rule29(rep x)
+      (rule="rule210")@Boolean => per rule210(rep x)
+      (rule="rule211")@Boolean => per rule211(rep x)
+      -- Specified rule not valid
+      x
+
+
+    -- Output of domain elements
+
+    coerce(x:%) : OutputForm ==
+      xx := normalForm(rep x)
+      o : List OutputForm := empty()
+
+      -- Loop over all terms
+      for tx in xx repeat
+        -- Coefficient part
+        if tx.coe = 1 then
+          ocoe:OutputForm := empty()
+        else
+          ocoe:OutputForm := tx.coe::OutputForm
+
+        -- Scalar part
+        if not empty? tx.sca then
+          oscal:List OutputForm := empty()
+          for asca in tx.sca repeat
+            if #asca = 1 then
+              s1 := asca(1)::Symbol::OutputForm
+              oscal := cons(s1, oscal)
+            if #asca = 2 then
+              s1 := asca(1)::Symbol::OutputForm
+              s2 := asca(2)::Symbol::OutputForm
+              oscal := cons(s1*s2, oscal)
+            if #asca = 3 then
+              s1 := asca(1)::Symbol::OutputForm
+              s2 := asca(2)::Symbol::OutputForm
+              s3 := asca(3)::Symbol::OutputForm
+              oscal := cons(s1*s2*s3, oscal)
+
+          osca:OutputForm := reduce("*", reverse! oscal)
+        else
+          osca:OutputForm := empty()
+
+        -- Vector part
+        if not empty? tx.vec then
+           vecs := tx.vec
+           if #vecs = 1 then
+             ovec:OutputForm := vecs(1)::Symbol::OutputForm
+           if #vecs = 2 then
+             v1 := vecs(1)::Symbol::OutputForm
+             v2 := vecs(2)::Symbol::OutputForm
+             ovec:OutputForm := v1^v2
+        else
+          ovec:OutputForm := empty()
+
+        o := cons(ocoe * osca * ovec, o)
+      if ~empty? o then
+        oo := reduce("+", o)
+      else
+        oo := "?"::OutputForm
+      oo

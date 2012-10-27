@@ -4,6 +4,9 @@ vc := vector(c)$VA(INT)
 vd := vector(d)$VA(INT)
 ve := vector(e)$VA(INT)
 vf := vector(f)$VA(INT)
+vg := vector(g)$VA(INT)
+vh := vector(h)$VA(INT)
+vi := vector(i)$VA(INT)
 v0 := vectorZero()$VA(INT)
 s0 := scalarZero()$VA(INT)
 
@@ -108,16 +111,58 @@ x := simplify((va^vb)^(vc^vd))
 y := simplify(s3p(va,vb,vd)*vc -s3p(va,vb,vc)*vd)
 simplify(x-y)
 
+-- Check expansion rule applications
+
 -- 2.8
-simplify(s3p(va,vb,vc)*vd)
+x1 := s3p(va,vb,vc)*vd
+simplify(x1)
+applyRule(x1, "rule28")
+
+x2 := vd*s3p(va,vb,vc)
+simplify(x2)
+applyRule(x2, "rule28")
+
+simplify(x1-x2)
 
 -- 2.9
-simplify(s3p(va,vb,vc)*(vd^ve))
---simplify((vd^ve)*s3p(va,vb,vc))
+x1 := s3p(va,vb,vc)*(vd^ve)
+simplify(x1)
+applyRule(x1, "rule29")
+
+x2 := (vd^ve)*s3p(va,vb,vc)
+simplify(x2)
+applyRule(x2, "rule29")
+
+simplify(x1-x2)
 
 -- 2.10
-simplify((vd*ve)*s3p(va,vb,vc))
---simplify(s3p(va,vb,vc)*(vd*ve))
+x1 := (vd*ve)*s3p(va,vb,vc)
+simplify(x1)
+applyRule(x1, "rule210")
+
+x2 := s3p(va,vb,vc)*(vd*ve)
+simplify(x2)
+applyRule(x2, "rule210")
+
+simplify(x1-x2)
 
 -- 2.11
-simplify(s3p(va,vb,vc)*s3p(vd,ve,vf))
+x1 := s3p(va,vb,vc)*s3p(vd,ve,vf)
+simplify(x1)
+applyRule(x1, "rule211")
+
+x2 := s3p(vd,ve,vf)*s3p(va,vb,vc)
+simplify(x2)
+applyRule(x2, "rule211")
+
+simplify(x1-x2)
+
+
+-- A longer example
+x := s3p(va,vb,vc)*s3p(vd,ve,vf)*s3p(vg,vh,vi)
+xr := applyRule(x, "rule211")
+xrr := applyRule(xr, "rule210")
+xrrr := applyRule(xrr, "rule210")
+xrrrr := applyRule(xrrr, "rule210")
+xrrrrr := applyRule(xrrrr, "rule210")
+-- By each application we can double the expression size!

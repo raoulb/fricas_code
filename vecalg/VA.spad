@@ -94,6 +94,8 @@ VectorAlgebraCategory(R : Ring) : Category == VectorSpaceCategory(R) with
 
     applyRule: (%, String) -> %
 
+    latex: % -> String
+
   add
 
     s3p(x:%, y:%, z:%) :% == (x^y) * z
@@ -618,7 +620,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
     rule28(x:Rep) : Rep ==
       ++ This rule implements the expansion according to the axiom
-      ++ (abc)*d = (d*a)*(b^c) + (d*b)*(c^a) + (d*c)*(a^b)
+      ++ d*(abc) = (d*a)*(b^c) + (d*b)*(c^a) + (d*c)*(a^b)
       -- Not a real vector? In that case the shapes will not match anyway
       not isVector?(per x) => x
 
@@ -664,7 +666,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
     rule29(x:Rep) : Rep ==
       ++ This rule implements the expansion according to the axiom
-      ++ (abc)*(d^h) = ((b^c)*(d^h))*a + ((c^a)*(d^h))*b + ((a^b)*(d^h))*c
+      ++ (d^h)*(abc) = ((b^c)*(d^h))*a + ((c^a)*(d^h))*b + ((a^b)*(d^h))*c
       ++             =   ( (b*d)*(c*h) - (b*h)*(c*d) ) * a
       ++               + ( (c*d)*(a*h) - (c*h)*(a*d) ) * b
       ++               + ( (a*d)*(b*h) - (a*h)*(b*d) ) * c
@@ -912,3 +914,65 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
       else
         oo := "?"::OutputForm
       oo
+
+
+    latex(x:%) : String ==
+      ++ Custom latex printing output routine.
+      ++ A desperate try to "fix" the broken output.
+      xx := normalForm(rep x)
+      o : List String := empty()
+
+      -- Loop over all terms
+      for tx in xx repeat
+        -- Coefficient part
+        if tx.coe = 1 then
+          ocoe : String := ""
+        else
+	  ocoe : String := "?"
+          --ocoe : String := string(tx.coe)
+
+        --if tx.coe >= 0 then
+        oop : String := " + "
+        --else
+        --oop : String := " - "
+
+        -- Scalar part
+        if not empty? tx.sca then
+          oscal:List String := empty()
+          for asca in tx.sca repeat
+            if #asca = 1 then
+              s1 := string(asca(1)::Symbol)
+	      oscal := cons(s1, oscal)
+	    if #asca = 2 then
+	      s1 := string(asca(1)::Symbol)
+	      s2 := string(asca(2)::Symbol)
+	      str := concat(["(",s1," \cdot ",s2,")"])
+	      oscal := cons(str, oscal)
+	    if #asca = 3 then
+	      s1 := string(asca(1)::Symbol)
+	      s2 := string(asca(2)::Symbol)
+	      s3 := string(asca(3)::Symbol)
+	      str := concat(["\left[",s1,",",s2,",",s3 "\right]"])
+	      oscal := cons(str, oscal)
+            oscal := cons(" ", oscal)
+
+	  osca := reduce(concat, rest oscal)
+	else
+          osca:String := empty()
+
+	-- Vector part
+	if not empty? tx.vec then
+	  vecs := tx.vec
+	  if #vecs = 1 then
+	    ovec:String := string(vecs(1)::Symbol)
+	  if #vecs = 2 then
+	    v1 := string(vecs(1)::Symbol)
+	    v2 := string(vecs(2)::Symbol)
+	    ovec:String := concat(["\left(",v1, " \wedge ", v2,"\right)"])
+	else
+	  ovec:String := empty()
+
+	o := cons(concat([ocoe, osca, ovec]), o)
+        o := cons(oop, o)
+
+      concat(reverse(rest o))

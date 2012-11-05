@@ -138,21 +138,21 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
     per x ==> (x@Rep) pretend %
 
     -- Basic data types used
-    coePart == R
-    scaPart == List List String
-    vecPart == List String
+    coePart ==> R
+    scaPart ==> List List String
+    vecPart ==> List String
     -- we dont want to use Strings, rather Exprs? Symbols? Variables?
 
     -- A single term is of the form alpha * a * v
-    Term == Record(coe:R, sca:scaPart, vec:vecPart)
+    Term ==> Record(coe:R, sca:scaPart, vec:vecPart)
 
     -- A normal form is a sum of terms
-    Rep == List Term
+    Rep ==> List Term
 
     -- Further structures used for contraction rules
-    scaTerm == Record(coe2:R, sca2:scaPart)
-    scaList == List(scaTerm)
-    mixTerm == Record(scal: scaList, vec2: vecPart)
+    scaTerm ==> Record(coe2:R, sca2:scaPart)
+    scaList ==> List(scaTerm)
+    mixTerm ==> Record(scal: scaList, vec2: vecPart)
 
     -- Extract single parts out of terms
     -- Do we really need this?
@@ -616,7 +616,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
 
 
     -- Transformation rules based on the axioms
-    -- First part are expansion rules
+    -- Expansion type rules
 
     rule28(x:Rep) : Rep ==
       ++ This rule implements the expansion according to the axiom
@@ -756,7 +756,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
               atp := scaTerms(i)
               foundtp := true
             else
-	      others := cons(scaTerms(i), others)
+              others := cons(scaTerms(i), others)
 
           if not founddp or not foundtp  then
             -- No dot or triple product found, add tx to the result and terminate
@@ -808,7 +808,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
             if #scaTerms(i) = 3 and #tps < 2 then
               tps := cons(scaTerms(i), tps)
             else
-	      others := cons(scaTerms(i), others)
+              others := cons(scaTerms(i), others)
 
           if #tps < 2  then
             -- No triple product(s) found, add tx to the result and terminate
@@ -832,6 +832,9 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
             result := append(result, [t1,t2,t3,t4,t5,t6])
 
       normalForm result
+
+    -- Combination type rules
+
 
 
     -- Simplification routines
@@ -928,7 +931,7 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
         if tx.coe = 1 then
           ocoe : String := ""
         else
-	  ocoe : String := "?"
+          ocoe : String := "?"
           --ocoe : String := string(tx.coe)
 
         --if tx.coe >= 0 then
@@ -942,37 +945,37 @@ VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
           for asca in tx.sca repeat
             if #asca = 1 then
               s1 := string(asca(1)::Symbol)
-	      oscal := cons(s1, oscal)
-	    if #asca = 2 then
-	      s1 := string(asca(1)::Symbol)
-	      s2 := string(asca(2)::Symbol)
-	      str := concat(["(",s1," \cdot ",s2,")"])
-	      oscal := cons(str, oscal)
-	    if #asca = 3 then
-	      s1 := string(asca(1)::Symbol)
-	      s2 := string(asca(2)::Symbol)
-	      s3 := string(asca(3)::Symbol)
-	      str := concat(["\left[",s1,",",s2,",",s3 "\right]"])
-	      oscal := cons(str, oscal)
+              oscal := cons(s1, oscal)
+            if #asca = 2 then
+              s1 := string(asca(1)::Symbol)
+              s2 := string(asca(2)::Symbol)
+              str := concat(["(",s1," \cdot ",s2,")"])
+              oscal := cons(str, oscal)
+            if #asca = 3 then
+              s1 := string(asca(1)::Symbol)
+              s2 := string(asca(2)::Symbol)
+              s3 := string(asca(3)::Symbol)
+              str := concat(["\left[",s1,",",s2,",",s3 "\right]"])
+              oscal := cons(str, oscal)
             oscal := cons(" ", oscal)
 
-	  osca := reduce(concat, rest oscal)
-	else
+          osca := reduce(concat, rest oscal)
+        else
           osca:String := empty()
 
-	-- Vector part
-	if not empty? tx.vec then
-	  vecs := tx.vec
-	  if #vecs = 1 then
-	    ovec:String := string(vecs(1)::Symbol)
-	  if #vecs = 2 then
-	    v1 := string(vecs(1)::Symbol)
-	    v2 := string(vecs(2)::Symbol)
-	    ovec:String := concat(["\left(",v1, " \wedge ", v2,"\right)"])
-	else
-	  ovec:String := empty()
+        -- Vector part
+        if not empty? tx.vec then
+          vecs := tx.vec
+          if #vecs = 1 then
+            ovec:String := string(vecs(1)::Symbol)
+          if #vecs = 2 then
+            v1 := string(vecs(1)::Symbol)
+            v2 := string(vecs(2)::Symbol)
+            ovec:String := concat(["\left(",v1, " \wedge ", v2,"\right)"])
+        else
+          ovec:String := empty()
 
-	o := cons(concat([ocoe, osca, ovec]), o)
+        o := cons(concat([ocoe, osca, ovec]), o)
         o := cons(oop, o)
 
       concat(reverse(rest o))

@@ -7,12 +7,12 @@
 -- E. M. Patterson, "Solving Problems in Vector Algebra", Oliver & Boyd Ltd, Edinburgh-London, 1968
 -- D. R. Stoutemyer, "Symbolic computer vector analysis", Computers & Mathematics with Applications, 1979
 
-va := vector(a)$VA(INT)
-vb := vector(b)$VA(INT)
-vc := vector(c)$VA(INT)
-vd := vector(d)$VA(INT)
-ve := vector(e)$VA(INT)
-vf := vector(f)$VA(INT)
+va := vector(a)$VA(FRAC INT)
+vb := vector(b)$VA(FRAC INT)
+vc := vector(c)$VA(FRAC INT)
+vd := vector(d)$VA(FRAC INT)
+ve := vector(e)$VA(FRAC INT)
+vf := vector(f)$VA(FRAC INT)
 
 
 -- Stoutemyer

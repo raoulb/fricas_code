@@ -8,7 +8,7 @@
 ++ based on the techniques described in the paper
 ++ "Rule-Based Simplification in Vector-Product Spaces"
 ++ by Songxin Liang and David J. Jeffrey
-VectorSpaceCategory(R : Ring) : Category == CoercibleTo(OutputForm) with
+VectorSpaceCategory(R : Field) : Category == CoercibleTo(OutputForm) with
 
     -- Addition of vectors
     "+": (%, %) -> %
@@ -50,7 +50,7 @@ VectorSpaceCategory(R : Ring) : Category == CoercibleTo(OutputForm) with
 ++   \spad{ a^(b^c) = (a.c)*b - (a.b)*c }
 ++   \spad{ (abc) = (bca) } where \spad{(abc)} denotes \spad{(a^b).c}
 ++   \spad{ (abc) = 0 } implies that \spad{a, b, c} are linearly dependent
-VectorAlgebraCategory(R : Ring) : Category == VectorSpaceCategory(R) with
+VectorAlgebraCategory(R : Field) : Category == VectorSpaceCategory(R) with
     -- or Algebra(R) ?
 
     vector: Symbol -> %
@@ -111,7 +111,7 @@ VectorAlgebraCategory(R : Ring) : Category == VectorSpaceCategory(R) with
 ++ based on the techniques described in the paper
 ++ "Rule-Based Simplification in Vector-Product Spaces"
 ++ by Songxin Liang and David J. Jeffrey
-VectorAlgebra(R : Ring) : VectorAlgebraCategory(R) == Implementation where
+VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
 
   Exports == with
 

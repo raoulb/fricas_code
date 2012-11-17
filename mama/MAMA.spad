@@ -1,9 +1,19 @@
+<<package MAMA MatrixManipulation>>=
 )abbrev package MAMA MatrixManipulation
+++ Author: Raoul Bourquin
+++ Date Created: 17 November 2012
+++ Date Last Updated: 17 November 2012
+++ Description:
+++ Some functions for manipulating (dense) matrices.
+++ Supported are various kinds of slicing, splitting
+++ and stacking of matrices. The functions resemble
+++ operations often used in numerical linear algebra
+++ algorithms.
 MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
-  R   : Field
+  R : Field
   Row : FiniteLinearAggregate R
   Col : FiniteLinearAggregate R
-  M   : MatrixCategory(R, Row, Col)
+  M : MatrixCategory(R, Row, Col)
 
   I ==> Integer
   PI ==> PositiveInteger
@@ -21,38 +31,104 @@ MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
     -- Package call is ugly because of many parameters of MAMA
 
     element : (M, PI, PI) -> M
+      ++ \spad{element} returns a single element out of a matrix.
+      ++ The element is put into a one by one matrix.
 
     arow : (M, PI) -> M
+      ++ \spad{arow} returns a single row out of a matrix.
+      ++ The row is put into a one by N matrix.
+
     rows : (M, LPI) -> M
+      ++ \spad{rows} returns several rows out of a matrix.
+      ++ The rows are stacked into a matrix.
+
     rows : (M, SPI) -> M
+      ++ \spad{rows} returns several rows out of a matrix.
+      ++ The rows are stacked into a matrix.
 
     acolumn : (M, PI) -> M
+      ++ \spad{acolumn} returns a single column out of a matrix.
+      ++ The column is put into a one by N matrix.
+
     columns : (M, LPI) -> M
+      ++ \spad{columns} returns several columns out of a matrix.
+      ++ The columns are stacked into a matrix.
+
     columns : (M, SPI) -> M
+      ++ \spad{columns} returns several columns out of a matrix.
+      ++ The columns are stacked into a matrix.
 
     subMatrix : (M, LPI, LPI) -> M
+      ++ \spad{subMatrix} returns several elements out of a matrix.
+      ++ The elements are stacked into a submatrix.
+
     subMatrix : (M, SPI, SPI) -> M
+      ++ \spad{subMatrix} returns several elements out of a matrix.
+      ++ The elements are stacked into a submatrix.
 
     diagonalMatrix : (M, I) -> M
+      ++ \spad{diagonalMatrix} returns a diagonal out of a matrix.
+      ++ The diagonal is put into a matrix of same shape as the
+      ++ original one. Positive integer arguments select upper
+      ++ off-diagonals, negative ones lower off-diagonals.
+
     diagonalMatrix : M -> M
+      ++ \spad{diagonalMatrix} returns the main diagonal out of
+      ++ a matrix. The diagonal is put into a matrix of same shape
+      ++ as the original one.
 
     bandMatrix : (M, LI) -> M
+      ++ \spad{bandMatrix} returns multiple diagonals out of a matrix.
+      ++ The diagonals are put into a matrix of same shape as the
+      ++ original one. Positive integer arguments select upper
+      ++ off-diagonals, negative ones lower off-diagonals.
+
     bandMatrix : (M, SI) -> M
+      ++ \spad{bandMatrix} returns multiple diagonals out of a matrix.
+      ++ The diagonals are put into a matrix of same shape as the
+      ++ original one. Positive integer arguments select upper
+      ++ off-diagonals, negative ones lower off-diagonals.
 
     -- Stacking matrices
+
     horizConcat : (List M) -> M
+      ++ \spad{horizConcat} concatenates matrices column wise.
+
     vertConcat : (List M) -> M
+      ++ \spad{vertConcat} concatenates matrices row wise.
+
     blockConcat : (List List M) -> M
+      ++ \spad{blockConcat} concatenates matrices row and
+      ++ column wise, building a block matrix. The order
+      ++ is row major as in \spad{matrix}.
 
     -- Splitting matrices
+
     vertSplit : (M, PI) -> List M
+      ++ \spad{vertSplit} splits a matrix into multiple
+      ++ submatrices row wise.
+
     vertSplit : (M, LPI) -> List M
+      ++ \spad{vertSplit} splits a matrix into multiple
+      ++ submatrices row wise.
 
     horizSplit : (M, PI) -> List M
+      ++ \spad{horizSplit} splits a matrix into multiple
+      ++ submatrices column wise.
+
     horizSplit : (M, LPI) -> List M
+      ++ \spad{horizSplit} splits a matrix into multiple
+      ++ submatrices column wise.
 
     blockSplit : (M, PI, PI) -> List List M
+      ++ \spad{blockSplit} splits a matrix into multiple
+      ++ submatrices row and column wise, dividing
+      ++ a matrix into blocks.
+
     blockSplit : (M, LPI, LPI) -> List List M
+      ++ \spad{blockSplit} splits a matrix into multiple
+      ++ submatrices row and column wise, dividing
+      ++ a matrix into blocks.
 
 
   Implementation ==> add

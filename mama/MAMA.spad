@@ -1,0 +1,235 @@
+)abbrev package MAMA MatrixManipulation
+MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
+  R   : Field
+  Row : FiniteLinearAggregate R
+  Col : FiniteLinearAggregate R
+  M   : MatrixCategory(R, Row, Col)
+
+  I ==> Integer
+  PI ==> PositiveInteger
+  LI ==> List I
+  SI ==> Segment I
+  LPI ==> List PI
+  SPI ==> Segment PI
+
+
+  Exports ==> with
+
+    -- Slicing matrices
+
+    -- How to call arow, acolumn? Name clashed with usual row, column
+    -- Package call is ugly because of many parameters of MAMA
+
+    element : (M, PI, PI) -> M
+
+    arow : (M, PI) -> M
+    rows : (M, LPI) -> M
+    rows : (M, SPI) -> M
+
+    acolumn : (M, PI) -> M
+    columns : (M, LPI) -> M
+    columns : (M, SPI) -> M
+
+    subMatrix : (M, LPI, LPI) -> M
+    subMatrix : (M, SPI, SPI) -> M
+
+    diagonalMatrix : (M, I) -> M
+    diagonalMatrix : M -> M
+
+    bandMatrix : (M, LI) -> M
+    bandMatrix : (M, SI) -> M
+
+    -- Stacking matrices
+    horizConcat : (List M) -> M
+    vertConcat : (List M) -> M
+    blockConcat : (List List M) -> M
+
+    -- Splitting matrices
+    vertSplit : (M, PI) -> List M
+    vertSplit : (M, LPI) -> List M
+
+    horizSplit : (M, PI) -> List M
+    horizSplit : (M, LPI) -> List M
+
+    blockSplit : (M, PI, PI) -> List List M
+    blockSplit : (M, LPI, LPI) -> List List M
+
+
+  Implementation ==> add
+
+    minr ==> minRowIndex
+    maxr ==> maxRowIndex
+    minc ==> minColIndex
+    maxc ==> maxColIndex
+
+    element(A, r, c) ==
+      matrix([[A(r,c)]])
+
+
+    arow(A:M, r:PI) : M ==
+      -- Really not happy with this:
+      transpose(row(A pretend Matrix(R), r)::Matrix(R)) pretend M
+
+
+    rows(A:M, lst:LPI) : M ==
+      rs := [ arow(A, r) for r in lst ]
+      -- why transpose here?
+      reduce(vertConcat, reverse!(rs))
+
+
+    -- Whats wrong here?
+    rows(A:M, si:SPI) : M ==
+      error "Not implemented"
+    --  rows(A, expand(si)::LPI)
+
+    -- Small issue: expand(SPI) ---> LI
+
+
+    acolumn(A:M, c:PI) : M ==
+      -- Really not happy with this:
+      (column(A pretend Matrix(R), c)::Matrix(R)) pretend M
+
+
+    columns(A:M, lst:LPI) : M ==
+      rs := [ acolumn(A,c) for c in lst ]
+      -- why no reverse here?
+      reduce(horizConcat, rs)
+
+
+    -- Whats wrong here?
+    columns(A:M, si:SPI) : M ==
+      error "Not implemented"
+    --  columns(A, expand(si)::LPI)
+
+
+    diagonalMatrix(A, n) ==
+      nr := nrows(A)
+      nc := ncols(A)
+
+      n > (nc-1) => error "requested diagonal out of range"
+      n < 0 and abs(n) > (nr-1) => error "requested diagonal out of range"
+
+      B := zero(nr,nc)
+
+      if n >= 0 then
+        dl := min(nc-n, nr)
+	sr := minr(A)
+	sc := minc(A) + n
+      else
+        dl := min(nc, nr-abs(n))
+	sr := minr(A) + abs(n)
+	sc := minc(A)
+
+      for i in 0..(dl-1) repeat
+        qsetelt!(B, sr+i, sc+i, A(sr+i, sc+i))
+
+      B
+
+
+    diagonalMatrix(A) ==
+      diagonalMatrix(A, 0)
+
+
+    bandMatrix(A:M, ln:LI) : M ==
+      -- Really inefficient
+      reduce("+", [diagonalMatrix(A,d) for d in ln])
+
+
+    bandMatrix(A:M, si:SI) : M ==
+      bandMatrix(A, expand(si))
+
+
+    subMatrix(A:M, lr:LPI, lc:LPI) : M ==
+      -- Really inefficient
+      lle := [[ element(A,r,c) for c in lc] for r in lr]
+      blockConcat(lle)
+
+
+    subMatrix(A:M, sr:SPI, sc:SPI) : M ==
+      subMatrix(A, low sr, high sr, low sc, high sc)
+
+
+    -- Stack matrices
+
+
+    horizConcat(LA) ==
+      reduce(horizConcat, LA)
+
+
+    vertConcat(LA) ==
+      reduce(vertConcat, LA)
+
+
+    blockConcat(LLA) ==
+      reduce(vertConcat, [reduce(horizConcat, LA) for LA in LLA])
+
+
+    -- Split matrices
+
+
+    vertSplit(A:M, r:PI) : List M ==
+      dr := nrows(A) exquo r
+      dr case "failed" => error "split does not result in an equal division"
+      mir := minr A
+      mic := minc A
+      mac := maxc A
+      [ subMatrix(A, mir+i*dr, mir+(i+1)*dr-1, mic, mac) for i in 0..(r-1) ]
+
+
+    vertSplit(A:M, lr:LPI) : List M ==
+      reduce("+", lr) ~= nrows(A) => error "split does not result in proper partition"
+
+      -- Could use a cumSum here
+      result : List M := empty()
+
+      mic := minc A
+      mac := maxc A
+      a := minr A
+
+      for dr in lr repeat
+        b := a + dr - 1
+        result := cons(subMatrix(A, a, b, mic, mac), result)
+        a := b
+
+      result
+
+
+    horizSplit(A:M, c:PI) : List M ==
+      dc := ncols(A) exquo c
+      dc case "failed" => error "split does not result in an equal division"
+      mir := minr A
+      mar := maxr A
+      mic := minc A
+      [ subMatrix(A, mir, mar, mic+i*dc, mic+(i+1)*dc-1) for i in 0..(c-1) ]
+
+
+    horizSplit(A:M, lc:LPI) : List M ==
+      reduce("+", lc) ~= ncols(A) => error "split does not result in proper partition"
+
+      -- Could use a cumSum here
+      result : List M := empty()
+
+      mir := minr A
+      mar := maxr A
+      a := minc A
+
+      for dc in lc repeat
+        b := a + dc - 1
+        result := cons(subMatrix(A, mir, mar, a, b), result)
+        a := b
+
+      result
+
+
+    blockSplit(A:M, nr:PI, nc:PI) : List List M ==
+      error "Not implemented"
+      --map( (X:M):(List M) +-> horizSplit(X, nc)::(List M), vertSplit(A, nr))
+      --map( (X:M):(List M) +-> horizSplit(X, nc)::(List M), vertSplit(A, nr))$List(List(M))
+
+      -- works fine in interpreter
+      --map(X+-> horizSplit(X, 3), vertSplit(m, 2))
+
+
+    blockSplit(A:M, lr:LPI, lc:LPI) : List List M ==
+      error "Not implemented"
+      --map( (X:M):(List M) +-> horizSplit(X, lc)::(List M), vertSplit(A, lr))

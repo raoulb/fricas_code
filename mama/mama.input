@@ -1,0 +1,68 @@
+M := matrix([[a,b,c],[d,e,f],[g,h,i]])
+
+element(M, 2,2)
+
+arow(M, 1)
+arow(M, 2)
+
+acolumn(M, 2)
+acolumn(M, 3)
+
+rows(M, [1,2])
+rows(M, [1,3])
+rows(M, [3,2])
+
+columns(M, [1,2])
+columns(M, [1,3])
+columns(M, [3,2])
+
+subMatrix(M, [1,2],[1,2])
+subMatrix(M, [1,3],[1,3])
+
+diagonalMatrix(M)
+
+diagonalMatrix(M, 1)
+diagonalMatrix(M, 2)
+--diagonalMatrix(M, 3)
+
+diagonalMatrix(M, -1)
+diagonalMatrix(M, -2)
+--diagonalMatrix(M, -3)
+
+bandMatrix(M, [-1,1])
+bandMatrix(M, [-1,0,1])
+
+bandMatrix(M, -1..1)
+
+
+-- Build a larger matrix
+
+
+A := matrix([[a]])
+B := matrix([[b]])
+C := matrix([[c]])
+
+A11 := element(M, 3,3)
+A12 := horizConcat([A,B,C])
+A21 := vertConcat([A,B,C])
+
+E := blockConcat([[A11,A12],[A21,M]])
+
+
+-- Split again
+
+
+vertSplit(E, 2)
+--vertSplit(E, 3)
+horizSplit(E, 2)
+--horizSplit(E, 5)
+
+vertSplit(E, [1,2,1])
+--vertSplit(E, [1,2,2])
+horizSplit(E, [2,2])
+--horizSplit(E, [2,1])
+
+--blockSplit(E, 2,2)
+--F := blockSplit(E, [1,2,1], [2,2])
+
+--zero?(blockCoancat(F) - E)

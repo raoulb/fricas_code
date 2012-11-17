@@ -1,0 +1,981 @@
+<<category VSC VectorSpaceCategory>>=
+)abbrev category VSC VectorSpaceCategory
+++ Author: Raoul Bourquin
+++ Date Created: 7 October 2012
+++ Date Last Updated: 12 October 2012
+++ Description:
+++ Implementation of component-free vector algebra
+++ based on the techniques described in the paper
+++ "Rule-Based Simplification in Vector-Product Spaces"
+++ by Songxin Liang and David J. Jeffrey
+VectorSpaceCategory(R : Field) : Category == CoercibleTo(OutputForm) with
+
+    -- Addition of vectors
+    "+": (%, %) -> %
+
+    -- Subtraction and unary minus of vectors
+    "-": (%, %) -> %
+    "-": % -> %
+
+    -- Multiplication by scalars from base field / ring
+    "*": (R, %) -> %
+    "*": (%, R) -> %
+
+    -- Equality of vectors
+    "=": (%, %) -> Boolean
+
+  add
+    (x:% - y:%) :% == x + (-1)::R * y
+    (-x:%) :% == (-1)::R * x
+    (x:% * r:R) :% == r * x
+
+    -- what about others?
+    -- x = y ==
+
+
+<<category VAC VectorAlgebraCategory>>=
+)abbrev category VAC VectorAlgebraCategory
+++ Author: Raoul Bourquin
+++ Date Created: 7 October 2012
+++ Date Last Updated: 12 October 2012
+++ Description:
+++ Implementation of component-free vector algebra
+++ based on the techniques described in the paper
+++ "Rule-Based Simplification in Vector-Product Spaces"
+++ by Songxin Liang and David J. Jeffrey
+++
+++ Axioms:
+++   \spad{ (a+b)^c = a^c + b^c }
+++   \spad{ a^b = -b^a }
+++   \spad{ a^(b^c) = (a.c)*b - (a.b)*c }
+++   \spad{ (abc) = (bca) } where \spad{(abc)} denotes \spad{(a^b).c}
+++   \spad{ (abc) = 0 } implies that \spad{a, b, c} are linearly dependent
+VectorAlgebraCategory(R : Field) : Category == VectorSpaceCategory(R) with
+    -- or Algebra(R) ?
+
+    vector: Symbol -> %
+      ++ Create a symbolic component-free vector object
+
+    scalarZero: () -> %
+      ++ Create a scalar zero object
+
+    vectorZero: () -> %
+      ++ Create a vector zero object
+
+    isScalar?: % -> Boolean
+      ++ Check if a given expression is scalar valued
+
+    isVector?: % -> Boolean
+      ++ Check if a given expression is vector valued
+
+    zero?: % -> Boolean
+
+    "*": (%, %) -> %
+      ++ Dot/scalar product
+      -- Possible confusion with inherited r:R*v:% from VSC?
+
+    "^": (%, %) -> %
+      ++ Vector cross/wedge product
+      -- rather use "/\"?
+
+    s3p: (%, %, %) -> %
+      ++ Triple vector product
+
+    simplify: % -> %
+      ++ Simplify a given vector expression by first
+      ++ bring it to the normal form, then apply
+      ++ transformation rules
+
+    identity?: (%, %) -> Boolean
+      ++ Check if two expressions are equal in value
+
+    coerce: % -> OutputForm
+      ++
+
+    applyRule: (%, String) -> %
+
+    latex: % -> String
+
+  add
+
+    s3p(x:%, y:%, z:%) :% == (x^y) * z
+
+
+<<domain VA VectorAlgebra>>=
+)abbrev domain VA VectorAlgebra
+++ Author: Raoul Bourquin
+++ Date Created: 7 October 2012
+++ Date Last Updated: 12 October 2012
+++ Description:
+++ Implementation of component-free vector algebra
+++ based on the techniques described in the paper
+++ "Rule-Based Simplification in Vector-Product Spaces"
+++ by Songxin Liang and David J. Jeffrey
+VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
+
+  Exports == with
+
+    normalize: % -> %
+      ++ Bring the vector expression into a normal form
+      ++ of type [coef, sca, vec]
+      ++ Example of a normal form:
+      ++ -2 * (a.b)*(abc) * (c^d)
+      ++ [-2, [[a, b],[a, b, c]], [c, d]]
+
+    --termOrder:
+    -- What can we gain by exporting this?
+      ++ Reorder the terms by the term order constructed
+
+    --applyRule: (%, String) -> %
+
+
+  Implementation == add
+
+    INT ==> Integer
+    NNI ==> NonNegativeInteger
+
+    rep x ==> (x@%) pretend Rep
+    per x ==> (x@Rep) pretend %
+
+    -- Basic data types used
+    coePart ==> R
+    scaPart ==> List List String
+    vecPart ==> List String
+    -- we dont want to use Strings, rather Exprs? Symbols? Variables?
+
+    -- A single term is of the form alpha * a * v
+    Term ==> Record(coe:R, sca:scaPart, vec:vecPart)
+
+    -- A normal form is a sum of terms
+    Rep ==> List Term
+
+    -- Further structures used for contraction rules
+    scaTerm ==> Record(coe2:R, sca2:scaPart)
+    scaList ==> List(scaTerm)
+    mixTerm ==> Record(scal: scaList, vec2: vecPart)
+
+    -- Extract single parts out of terms
+    -- Do we really need this?
+    coefPart(x:Term) : R == x.coe
+    scalarPart(x:Term) : scaPart == x.sca
+    vectorPart(x:Term) : vecPart == x.vec
+
+
+    -- Construct new domain elements
+
+    scalarZero() : % == per [ [0, [], []] ]
+
+    vectorZero() : % == per [ [0, [], ["0"]] ]
+      -- TODO: Fix "0" string here
+
+    vector(x:Symbol) : % == per [ [1::R, [], [string x]] ]
+
+
+    -- Check a term for being zero
+
+    szero?(x:Term) : Boolean ==
+      -- Coefficient is zero and there is no vector part
+      -- But what about scalar part: scalar part could be zero
+      -- if it contains a scalar product of orthogonal vectors.
+      -- But: we can not make any assumptions on abstract vectors yet!
+      x.coe = 0 and empty? x.vec
+
+    vzero?(x:Term) : Boolean ==
+      -- Vector is zero or multiplied by zero coefficient
+      -- But what about scalar part: scalar part could be zero
+      -- if it contains a scalar product of orthogonal vectors.
+      -- But: we can not make any assumptions on abstract vectors yet!
+      ~empty? x.vec and (x.coe = 0 or (x.vec)(1) = "0")
+      -- What about x.vec beeing a zero?
+      -- Or a vector product with one factor a zero?
+
+    zero?(x:%) : Boolean ==
+      xx := rep x
+      result := true
+      for tx in xx repeat
+        not szero? tx and not vzero? tx => result := false
+      result
+
+
+    -- Check shapes
+
+    -- Check if an expression is a true vector (possibly zero)
+    -- or just a scalar expression. Examples for single terms:
+    -- [a, [], []]  scalar
+    -- [a, [...], []]  scalar
+    -- [0, [...], []]  scalar
+    -- [0, [], []]  scalar
+    -- [0, [...], [0]]  zero-vector
+    -- [a, [...], [0]]  zero-vector
+    -- [a, [0,0], [0]]  zero-vector
+    -- [a, [...], [v]]  vector
+    -- [a, [...], [v, w]]  vector
+    -- [0, [...], [u, v, w]]  vector? (triple product evaluated result in scalar!)
+
+    isScalar?(x:%) : Boolean ==
+      xx := rep x
+      empty? xx => false
+      result := true
+      -- Search if there is a term which is not a scalar
+      for tx in xx repeat
+        not empty? tx.vec => (result := false)
+      result
+
+    isVector?(x:%) : Boolean ==
+      xx := rep x
+      empty? xx => false
+      -- Search if there is a term which is not a vector
+      result := true
+      for tx in xx repeat
+        empty? tx.vec => (result := false)
+      result
+
+
+    -- Term order functions
+
+    listOrder?(v1:vecPart, v2:vecPart) : Boolean ==
+      empty? v1 => true
+      empty? v2 => false
+      n1 := #v1
+      n2 := #v2
+      n1 < n2 => true
+      n1 > n2 => false
+
+      -- Case n1 = n2
+      result := true
+      for i in 1..n1 repeat
+        if v1(i) < v2(i) then
+          result := true
+          break
+
+        if v1(i) > v2(i) then
+          result := false
+          break
+
+      result
+
+    listEq?(v1:vecPart, v2:vecPart) : Boolean ==
+      empty? v1 and empty? v2 => true
+      empty? v1 and not empty? v2 => false
+      n1 := #v1
+      n2 := #v2
+      n1 ~= n2 => false
+
+      -- Case n1 = n2
+      result := true
+      for i in 1..n1 repeat
+        if v1(i) ~= v2(i) then
+          result := false
+          break
+
+      result
+
+    listListOrder?(s1:scaPart, s2:scaPart) : Boolean ==
+      empty? s1 => true
+      empty? s2 => false
+      n1 := #s1
+      n2 := #s2
+      n1 < n2 => true
+      n1 > n2 => false
+      result := true
+
+      -- Case n1 = n2
+      for i in 1..n1 repeat
+        if listOrder?(s1(i), s2(i)) and not listEq?(s1(i), s2(i)) then
+          result := true
+          break
+
+        if not listOrder?(s1(i), s2(i)) then
+          result := false
+          break
+
+      result
+
+    listListEq?(s1:scaPart, s2:scaPart) : Boolean ==
+      empty? s1 and empty? s2 => true
+      empty? s1 and not empty? s2 => false
+      n1 := #s1
+      n2 := #s2
+      n1 ~= n2 => false
+      result := true
+
+      -- Case n1 = n2
+      for i in 1..n1 repeat
+        if not listEq?(s1(i), s2(i)) then
+          result := false
+          break
+
+      result
+
+    termOrder?(t1:Term, t2:Term) : Boolean ==
+      szero? t1 or vzero? t1 => true
+      szero? t2 or vzero? t2 => false
+
+      listOrder?(t1.vec, t2.vec) and not listEq?(t1.vec, t2.vec) => true
+      not listEq?(t1.vec, t2.vec) => false
+
+      listListOrder?(t1.sca, t2.sca) and not listListEq?(t1.sca, t2.sca) => true
+      not listListEq?(t1.sca, t2.sca) => false
+
+      true
+
+    termEq?(t1:Term, t2:Term) : Boolean ==
+      t1.coe = t2.coe and listListEq?(t1.sca, t2.sca) and listEq?(t1.vec, t2.vec) => true
+
+    scalarPartEq?(t1:Term, t2:Term) : Boolean ==
+      listListEq?(t1.sca, t2.sca)
+
+    vectorPartEq?(t1:Term, t2:Term) : Boolean ==
+      listEq?(t1.vec, t2.vec)
+
+
+    -- Bring the vector expression into a normal form
+    -- of type [coef, sca, vec]
+    -- Example of a normal form:
+    -- -2 * (a.b)*(abc) * (c^d)
+    -- [-2, [[a, b],[a, b, c]], [c, d]]
+    normalForm(xx:Rep) : Rep ==
+      -- for all tx in xx
+      --   make scalar part and vector part in ascending order
+      --   use transformation rules to check for zero (not here)
+      --   collect non-zero terms in yy
+      --   make yy in ascending order
+      --   combine same terms (not here)
+      -- return y
+
+      result : Rep := empty()
+
+      for tx in xx repeat
+        -- Result term
+        nt : Term := [tx.coe, [], []]
+
+        -- Order scalar parts
+        scaParts := tx.sca
+        nsp : scaPart := empty()
+
+        for sp in scaParts repeat
+          if #sp = 1 then
+            -- A single scalar part
+            nsp := cons(sp, nsp)
+
+          else if #sp = 2 then
+            -- A scalar product
+            -- Axiom 2.2 applies: a*b = b*a
+            nsp := cons(sort(sp), nsp)
+
+          else if #sp = 3 then
+            -- A scalar triple product
+            -- Axiom 2.3 applies: [abc] = [bca] = [cab] = -[acb] = -[cba] = -[bac]
+            r := countingBubbleSort(sp)$SortPackage(String, List(String))
+            nsp := cons(r.sorted, nsp)
+            if odd? r.exchanges then nt.coe := -nt.coe
+
+        -- Sort the scalar parts
+        nt.sca := sort(listOrder?, nsp)
+
+        -- Order vector parts
+        vp := tx.vec
+        nvp : vecPart := empty()
+
+        if #vp = 1 then
+          -- A single vector part
+          nvp := vp
+
+        else if #vp = 2 then
+          -- A vector product
+          -- Axiom 2.2 applies: a^b = -b^a
+          r := countingBubbleSort(vp)$SortPackage(String, List(String))
+          nvp := r.sorted
+          if odd? r.exchanges then nt.coe := -nt.coe
+
+        nt.vec := nvp
+
+        -- Add new term to the result
+        result := cons(nt, result)
+
+      -- Sort the terms in the result
+      result := sort!(termOrder?, result)
+
+
+    normalize(x:%) : % ==
+      per normalForm(rep x)
+
+
+    -- Implementation of algebraic operations
+
+    -- Addition
+    (x:% + y:%) : % ==
+      isVector?(x) ~= isVector?(y) => error "Addition of non-compatible element shapes"
+      per normalForm append(rep x, rep y)
+
+    -- Scalar times vector
+    (r:R * x:%) : % ==
+      xx := rep x
+      zz := [ [r*tx.coe, tx.sca, tx.vec] for tx in xx ]
+      per normalForm zz
+
+    -- Multiply two domain elements
+    scalarTimesScalar(rr:Rep, ss:Rep) : Rep ==
+      zz : Rep := empty()
+
+      for tr in rr repeat
+        for ts in ss repeat
+          t := [tr.coe*ts.coe, append(tr.sca,ts.sca), []]@Term
+          zz := cons(t, zz)
+
+      normalForm zz
+
+    scalarTimesVector(ss:Rep, vv:Rep) : Rep ==
+      zz : Rep := empty()
+
+      for ts in ss repeat
+        for tv in vv repeat
+          t := [ts.coe*tv.coe, append(ts.sca,tv.sca), tv.vec]@Term
+          zz := cons(t, zz)
+
+      normalForm zz
+
+    -- Scalar or dot-product of two vectors
+    vectorTimesVector(xx:Rep, yy:Rep) : Rep ==
+      zz : Rep := empty()
+
+      for tx in xx repeat
+        nx:INT := # tx.vec
+
+        for ty in yy repeat
+          ny:INT := # ty.vec
+
+          vx := tx.vec
+          vy := ty.vec
+
+          if nx = 1 and ny = 1 then
+            scap := cons([vx(1),vy(1)], append(tx.sca,ty.sca))
+            m := [tx.coe * ty.coe, scap, []]@Term
+            zz := cons(m, zz)
+
+          else if nx = 1 and ny = 2 then
+            scap := cons([vx(1),vy(1),vy(2)], append(tx.sca,ty.sca))
+            m := [tx.coe*ty.coe, scap, []]@Term
+            zz := cons(m, zz)
+
+          else if nx = 2 and ny = 1 then
+            scap := cons([vx(1),vx(2),vy(1)], append(tx.sca,ty.sca))
+            m := [tx.coe*ty.coe, scap, []]@Term
+            zz := cons(m, zz)
+
+          else if nx = 2 and ny = 2 then
+            coep := tx.coe * ty.coe
+            scap1 := [[vx(1),vy(1)], [vx(2),vy(2)]]
+            scap2 := [[vx(1),vy(2)], [vx(2),vy(1)]]
+            m1 := [coep, append(scap1,append(tx.sca,ty.sca)), []]@Term
+            m2 := [(-1)*coep, append(scap2,append(tx.sca,ty.sca)), []]@Term
+            zz := append(zz, [m1, m2])
+
+      normalForm zz
+
+    -- Dispatch * operator of two domain elements depending on element shape
+    (x:% * y:%) : % ==
+      xx := rep x
+      yy := rep y
+      tex := isVector?(x)
+      tey := isVector?(y)
+
+      not tex and not tey =>
+        per scalarTimesScalar(xx, yy)
+
+      tex and not tey =>
+        per scalarTimesVector(yy, xx)
+
+      not tex and tey =>
+        per scalarTimesVector(xx, yy)
+
+      tex and tey =>
+        per vectorTimesVector(yy, xx)
+
+
+    -- Wedge or cross-product of two vectors
+    (x:% ^ y:%) :% ==
+      not isVector?(x) or not isVector?(y) => error "Wedge product can not contain scalar elements"
+
+      xx := rep x
+      yy := rep y
+
+      zz : Rep := empty()
+
+      for tx in xx repeat
+        nx:INT := # tx.vec
+
+        for ty in yy repeat
+          ny:INT := # ty.vec
+
+          vx := tx.vec
+          vy := ty.vec
+
+          if nx = 1 and ny = 1 then
+            m := [tx.coe*ty.coe, append(tx.sca,ty.sca), append(tx.vec,ty.vec)]@Term
+            zz := cons(m, zz)
+
+          else if nx = 1 and ny = 2 then
+            coep := tx.coe * ty.coe
+            scap1 := cons([vx(1),vy(2)], append(tx.sca,ty.sca))
+            scap2 := cons([vx(1),vy(1)], append(tx.sca,ty.sca))
+            m1 := [coep, scap1, [vy(1)]]@Term
+            m2 := [(-1)*coep, scap2, [vy(2)]]@Term
+            zz := append(zz, [m1, m2])
+
+          else if nx = 2 and ny = 1 then
+            coep := tx.coe * ty.coe
+            scap1 := cons([vx(1),vy(1)], append(tx.sca,ty.sca))
+            scap2 := cons([vx(2),vy(1)], append(tx.sca,ty.sca))
+            m1 := [coep, scap1, [vx(2)]]@Term
+            m2 := [(-1)*coep, scap2, [vx(1)]]@Term
+            zz := append(zz, [m1, m2])
+
+          else if nx = 2 and ny = 2 then
+            coep := tx.coe * ty.coe
+            scap1 := cons([vx(1),vx(2),vy(2)], append(tx.sca,ty.sca))
+            scap2 := cons([vx(1),vx(2),vy(1)], append(tx.sca,ty.sca))
+            m1 := [coep, scap1, [vy(1)]]@Term
+            m2 := [(-1)*coep, scap2, [vy(2)]]@Term
+            zz := append(zz, [m1, m2])
+
+      per normalForm zz
+
+
+    -- Equivalence of vector expressions
+    (x:% = y:%) : Boolean ==
+      identity?(x, y)
+
+
+    -- Simple transformations
+
+    combineTerms(xx:Rep) : Rep ==
+      result:Rep := empty()
+      n : NNI := #xx
+      i : NNI := 1
+
+      while i <= n repeat
+        -- Current term
+        ta := xx(i)
+        cnew := ta.coe
+
+        -- Collect all following terms that are equal to current
+        j : NNI := i + 1
+        while j <= n and scalarPartEq?(ta, xx(j)) and vectorPartEq?(ta, xx(j)) repeat
+          cnew := cnew + xx(j).coe
+          j := j + 1
+
+        -- Combine and append
+        tnew:Term := [cnew, ta.sca, ta.vec]@Term
+        result := cons(tnew, result)
+
+        -- Continue with the first non-equal term
+        i := j
+
+      reverse! result
+
+
+    removeZeroes(xx:Rep) : Rep ==
+      -- Check for and remove zeroes:
+      --   coe = 0
+      --   sca is zero
+      --   vec is zero
+      -- We have
+      --   a^a -> 0 and 0^a -> 0 and a^0 -> 0
+      --   (aab) -> 0 and (abb) -> 0 and (aba) -> 0
+      -- With assumptions we could also do
+      --   a*b -> 0 for a _|_ b
+      result : Rep := empty()
+
+      for tx in xx repeat
+        szero? tx => "iterate"
+        vzero? tx => "iterate"
+
+        -- Axiom: a^a = 0
+        vp := tx.vec
+        #vp = 2 and vp(1) = vp(2) => "iterate"
+
+        -- Axiom: (a,a,b) = (a,b,a) = (b,a,a) = 0
+        --sp := tx.sca
+        tpzero : Boolean := false
+        for s in tx.sca repeat
+          if #s = 3 then
+            s(1) = s(2) or s(1) = s(3) or s(2) = s(3) => tpzero := true
+
+        tpzero => "iterate"
+
+        -- Term contains no known zeros
+        result := cons(tx, result)
+
+      -- No terms left? Construct a single zero
+      if empty? result then
+        isScalar?(per xx) => result := rep scalarZero()
+        isVector?(per xx) => result := rep vectorZero()
+
+      reverse! result
+
+
+    -- Transformation rules based on the axioms
+    -- Expansion type rules
+
+    rule28(x:Rep) : Rep ==
+      ++ This rule implements the expansion according to the axiom
+      ++ d*(abc) = (d*a)*(b^c) + (d*b)*(c^a) + (d*c)*(a^b)
+      -- Not a real vector? In that case the shapes will not match anyway
+      not isVector?(per x) => x
+
+      yy := normalForm(x)
+      result : Rep := empty()
+
+      for tx in yy repeat
+        -- Copy terms not suitable for this rule over to the result
+        if #tx.vec ~= 1 or empty? tx.sca then
+          result := cons(tx, result)
+
+        -- Handle terms for which the rule applies
+        else
+          found := false
+          scaTerms := tx.sca
+          n := #scaTerms
+          atp : List String := empty()
+          others : List List String := empty()
+
+          -- Take out the first single triple product
+          for i in 1..n repeat
+            if #scaTerms(i) = 3 then
+              atp := scaTerms(i)
+              others := [scaTerms(j) for j in 1..n | j ~= i]
+              found := true
+              break
+
+          -- Take out the first single vector
+          d := first tx.vec
+
+          if not found then
+            -- No triple product found, add tx to the result and terminate
+            result := cons(tx, result)
+          else
+            -- There was a triple product, add the 3 terms of the axioms RHS to the result
+            t1:Term := [tx.coe, cons([d,atp(1)], others), [atp(2),atp(3)]]
+            t2:Term := [tx.coe, cons([d,atp(2)], others), [atp(3),atp(1)]]
+            t3:Term := [tx.coe, cons([d,atp(3)], others), [atp(1),atp(2)]]
+            result := append(result, [t1,t2,t3])
+
+      normalForm result
+
+
+    rule29(x:Rep) : Rep ==
+      ++ This rule implements the expansion according to the axiom
+      ++ (d^h)*(abc) = ((b^c)*(d^h))*a + ((c^a)*(d^h))*b + ((a^b)*(d^h))*c
+      ++             =   ( (b*d)*(c*h) - (b*h)*(c*d) ) * a
+      ++               + ( (c*d)*(a*h) - (c*h)*(a*d) ) * b
+      ++               + ( (a*d)*(b*h) - (a*h)*(b*d) ) * c
+      ++             =   (b*d)*(c*h)*a - (b*h)*(c*d)*a
+      ++               + (c*d)*(a*h)*b - (c*h)*(a*d)*b
+      ++               + (a*d)*(b*h)*c - (a*h)*(b*d)*c
+      -- Not a real vector? In that case the shapes will not match anyway
+      not isVector?(per x) => x
+
+      yy := normalForm(x)
+      result : Rep := empty()
+
+      for tx in yy repeat
+        -- Copy terms not suitable for this rule over to the result
+        if #tx.vec ~= 2 or empty? tx.sca then
+          result := cons(tx, result)
+
+        -- Handle terms for which the rule applies
+        else
+          found := false
+          scaTerms := tx.sca
+          n := #scaTerms
+          atp:List String := empty()
+          others:List List String := empty()
+
+          -- Take out the first triple product
+          for i in 1..n repeat
+            if #scaTerms(i) = 3 then
+              atp := scaTerms(i)
+              others := [scaTerms(j) for j in 1..n | j ~= i]
+              found := true
+              break
+
+          -- Take out the cross vectors
+          d := first tx.vec
+          h := second tx.vec
+
+          if not found then
+            -- No triple product found, add tx to the result and terminate
+            result := cons(tx, result)
+          else
+            -- There was a triple product, add the 6 terms of the axioms RHS to the result
+            a := atp(1)
+            b := atp(2)
+            c := atp(3)
+            t1:Term := [ tx.coe, append(others, [[b,d], [c,h]]), [a]]
+            t2:Term := [-tx.coe, append(others, [[b,h], [c,d]]), [a]]
+            t3:Term := [ tx.coe, append(others, [[c,d], [a,h]]), [b]]
+            t4:Term := [-tx.coe, append(others, [[c,h], [a,d]]), [b]]
+            t5:Term := [ tx.coe, append(others, [[a,d], [b,h]]), [c]]
+            t6:Term := [-tx.coe, append(others, [[a,h], [b,d]]), [c]]
+            result := append(result, [t1,t2,t3,t4,t5,t6])
+
+      normalForm result
+
+
+    rule210(x:Rep) : Rep ==
+      ++ This rule implements the expansion according to the axiom
+      ++ (d*h)(abc) = (d*a)(hbc) + (d*b)(ahc) + (d*c)(abh)
+      -- Not a scalar? In that case the shapes will not match anyway
+      not isScalar?(per x) => x
+
+      yy := normalForm(x)
+      result : Rep := empty()
+
+      for tx in yy repeat
+        -- Copy terms not suitable for this rule over to the result
+        if not empty? tx.vec or empty? tx.sca then
+          result := cons(tx, result)
+
+        -- Handle terms for which the rule applies
+        else
+          founddp := false
+          foundtp := false
+          scaTerms := tx.sca
+          n := #scaTerms
+          adp : List String := empty()
+          atp : List String := empty()
+          others : List List String := empty()
+
+          -- Take out the first dot and triple product
+          for i in 1..n repeat
+            if not founddp and #scaTerms(i) = 2 then
+              adp := scaTerms(i)
+              founddp := true
+            else if not foundtp and #scaTerms(i) = 3 then
+              atp := scaTerms(i)
+              foundtp := true
+            else
+              others := cons(scaTerms(i), others)
+
+          if not founddp or not foundtp  then
+            -- No dot or triple product found, add tx to the result and terminate
+            result := cons(tx, result)
+          else
+            -- There were dot and triple products, add the 3 terms of the axioms RHS to the result
+            a := atp(1)
+            b := atp(2)
+            c := atp(3)
+            d := adp(1)
+            h := adp(2)
+            t1:Term := [tx.coe, append(others, [[d,a],[h,b,c]]), []]
+            t2:Term := [tx.coe, append(others, [[d,b],[a,h,c]]), []]
+            t3:Term := [tx.coe, append(others, [[d,c],[a,b,h]]), []]
+            result := append(result, [t1,t2,t3])
+
+      normalForm result
+
+
+    rule211(x:Rep) : Rep ==
+      ++ This rule implements the expansion according to the axiom
+      ++ (abc)(dgh) = ((b^c)*(d^g))(a*h) + ((c^a)*(d^g))(b*h) + ((a^b)*(d^g))(c*h)
+      ++            =   ((b*d)(c*g) - (b*g)(c*d)) (a*h)
+      ++              + ((c*d)(a*g) - (c*g)(a*d)) (b*h)
+      ++              + ((a*d)(b*g) - (a*g)(b*d)) (c*h)
+      ++            =   (b*d)(c*g)(a*h) - (b*g)(c*d)(a*h)
+      ++              + (c*d)(a*g)(b*h) - (c*g)(a*d)(b*h)
+      ++              + (a*d)(b*g)(c*h) - (a*g)(b*d)(c*h)
+      -- Not a scalar? In that case the shapes will not match anyway
+      not isScalar?(per x) => x
+
+      yy := normalForm(x)
+      result : Rep := empty()
+
+      for tx in yy repeat
+        -- Copy terms not suitable for this rule over to the result
+        if not empty? tx.vec or empty? tx.sca then
+          result := cons(tx, result)
+
+        -- Handle terms for which the rule applies
+        else
+          scaTerms := tx.sca
+          n := #scaTerms
+          tps : List List String := empty()
+          others : List List String := empty()
+
+          -- Take out the first two triple products
+          for i in 1..n repeat
+            if #scaTerms(i) = 3 and #tps < 2 then
+              tps := cons(scaTerms(i), tps)
+            else
+              others := cons(scaTerms(i), others)
+
+          if #tps < 2  then
+            -- No triple product(s) found, add tx to the result and terminate
+            result := cons(tx, result)
+          else
+            -- There were two triple products, add the 6 terms of the axioms RHS to the result
+            tp1 := tps(1)
+            tp2 := tps(2)
+            a := tp1(1)
+            b := tp1(2)
+            c := tp1(3)
+            d := tp2(1)
+            g := tp2(2)
+            h := tp2(3)
+            t1:Term := [ tx.coe, append(others, [[b,d],[c,g],[a,h]]), []]
+            t2:Term := [-tx.coe, append(others, [[b,g],[c,d],[a,h]]), []]
+            t3:Term := [ tx.coe, append(others, [[c,d],[a,g],[b,h]]), []]
+            t4:Term := [-tx.coe, append(others, [[c,g],[a,d],[b,h]]), []]
+            t5:Term := [ tx.coe, append(others, [[a,d],[b,g],[c,h]]), []]
+            t6:Term := [-tx.coe, append(others, [[a,g],[b,d],[c,h]]), []]
+            result := append(result, [t1,t2,t3,t4,t5,t6])
+
+      normalForm result
+
+    -- Combination type rules
+
+
+
+    -- Simplification routines
+
+    simplify(x:%) : % ==
+      xx := normalForm(rep x)
+      xx := combineTerms(xx)
+      xx := removeZeroes(xx)
+      per xx
+
+
+    identity?(x:%, y:%) : Boolean ==
+      zero? simplify(x-y)
+
+
+    -- Apply specific rules to the given expression
+
+    applyRule(x:%, rule:String) : % ==
+      ++ Central rule dispatcher
+      --(rule="rule01")@Boolean => per rule01(rep x)
+      --(rule="rule02")@Boolean => per rule02(rep x)
+      (rule="rule28")@Boolean => per rule28(rep x)
+      (rule="rule29")@Boolean => per rule29(rep x)
+      (rule="rule210")@Boolean => per rule210(rep x)
+      (rule="rule211")@Boolean => per rule211(rep x)
+      -- Specified rule not valid
+      x
+
+
+    -- Output of domain elements
+
+    coerce(x:%) : OutputForm ==
+      xx := normalForm(rep x)
+      o : List OutputForm := empty()
+
+      -- Loop over all terms
+      for tx in xx repeat
+        -- Coefficient part
+        if tx.coe = 1 then
+          ocoe:OutputForm := empty()
+        else
+          ocoe:OutputForm := tx.coe::OutputForm
+
+        -- Scalar part
+        if not empty? tx.sca then
+          oscal:List OutputForm := empty()
+          for asca in tx.sca repeat
+            if #asca = 1 then
+              s1 := asca(1)::Symbol::OutputForm
+              oscal := cons(s1, oscal)
+            if #asca = 2 then
+              s1 := asca(1)::Symbol::OutputForm
+              s2 := asca(2)::Symbol::OutputForm
+              oscal := cons(s1*s2, oscal)
+            if #asca = 3 then
+              s1 := asca(1)::Symbol::OutputForm
+              s2 := asca(2)::Symbol::OutputForm
+              s3 := asca(3)::Symbol::OutputForm
+              oscal := cons(s1*s2*s3, oscal)
+
+          osca:OutputForm := reduce("*", reverse! oscal)
+        else
+          osca:OutputForm := empty()
+
+        -- Vector part
+        if not empty? tx.vec then
+           vecs := tx.vec
+           if #vecs = 1 then
+             ovec:OutputForm := vecs(1)::Symbol::OutputForm
+           if #vecs = 2 then
+             v1 := vecs(1)::Symbol::OutputForm
+             v2 := vecs(2)::Symbol::OutputForm
+             ovec:OutputForm := v1^v2
+        else
+          ovec:OutputForm := empty()
+
+        o := cons(ocoe * osca * ovec, o)
+      if ~empty? o then
+        oo := reduce("+", o)
+      else
+        oo := "?"::OutputForm
+      oo
+
+
+    latex(x:%) : String ==
+      ++ Custom latex printing output routine.
+      ++ A desperate try to "fix" the broken output.
+      xx := normalForm(rep x)
+      o : List String := empty()
+
+      -- Loop over all terms
+      for tx in xx repeat
+        -- Coefficient part
+        if tx.coe = 1 then
+          ocoe : String := ""
+        else
+          ocoe : String := "?"
+          --ocoe : String := string(tx.coe)
+
+        --if tx.coe >= 0 then
+        oop : String := " + "
+        --else
+        --oop : String := " - "
+
+        -- Scalar part
+        if not empty? tx.sca then
+          oscal:List String := empty()
+          for asca in tx.sca repeat
+            if #asca = 1 then
+              s1 := string(asca(1)::Symbol)
+              oscal := cons(s1, oscal)
+            if #asca = 2 then
+              s1 := string(asca(1)::Symbol)
+              s2 := string(asca(2)::Symbol)
+              str := concat(["(",s1," \cdot ",s2,")"])
+              oscal := cons(str, oscal)
+            if #asca = 3 then
+              s1 := string(asca(1)::Symbol)
+              s2 := string(asca(2)::Symbol)
+              s3 := string(asca(3)::Symbol)
+              str := concat(["\left[",s1,",",s2,",",s3 "\right]"])
+              oscal := cons(str, oscal)
+            oscal := cons(" ", oscal)
+
+          osca := reduce(concat, rest oscal)
+        else
+          osca:String := empty()
+
+        -- Vector part
+        if not empty? tx.vec then
+          vecs := tx.vec
+          if #vecs = 1 then
+            ovec:String := string(vecs(1)::Symbol)
+          if #vecs = 2 then
+            v1 := string(vecs(1)::Symbol)
+            v2 := string(vecs(2)::Symbol)
+            ovec:String := concat(["\left(",v1, " \wedge ", v2,"\right)"])
+        else
+          ovec:String := empty()
+
+        o := cons(concat([ocoe, osca, ovec]), o)
+        o := cons(oop, o)
+
+      concat(reverse(rest o))

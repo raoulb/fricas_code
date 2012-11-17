@@ -138,13 +138,14 @@ MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
     minc ==> minColIndex
     maxc ==> maxColIndex
 
+    cumSum(l: LI) : LI == (s:I:=0; [(s:=s+i) for i in l])
+
     element(A, r, c) ==
       matrix([[A(r,c)]])
 
 
     arow(A:M, r:PI) : M ==
-      -- Really not happy with this:
-      transpose(row(A pretend Matrix(R), r)::Matrix(R)) pretend M
+      subMatrix(A, r, r, minc A, maxc A)
 
 
     rows(A:M, lst:LPI) : M ==
@@ -161,8 +162,7 @@ MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
 
 
     acolumn(A:M, c:PI) : M ==
-      -- Really not happy with this:
-      (column(A pretend Matrix(R), c)::Matrix(R)) pretend M
+      subMatrix(A, minr A, maxr A, c, c)
 
 
     columns(A:M, lst:LPI) : M ==
@@ -234,7 +234,7 @@ MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
       reduce(vertConcat, LA)
 
 
-    blockConcat(LLA) ==
+    blockConcat(LLA: List List M) : M ==
       reduce(vertConcat, [reduce(horizConcat, LA) for LA in LLA])
 
 
@@ -279,6 +279,11 @@ MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
 
     horizSplit(A:M, lc:LPI) : List M ==
       reduce("+", lc) ~= ncols(A) => error "split does not result in proper partition"
+
+      --l := cumSum(lc)
+      --mir := minr A
+      --mar := maxr A
+      --result := [ subMatrix(A, mir, mar, l(i), l(i+1)-1) for i in 0..(#l-1) ]
 
       -- Could use a cumSum here
       result : List M := empty()

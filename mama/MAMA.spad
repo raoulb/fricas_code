@@ -148,9 +148,8 @@ MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
 
 
     rows(A:M, lst:LPI) : M ==
-      rs := [ arow(A, r) for r in lst ]
-      -- why transpose here?
-      reduce(vertConcat, reverse!(rs))
+      ls := [arow(A, r) for r in lst]
+      reduce(vertConcat, ls)
 
 
     -- Whats wrong here?
@@ -167,9 +166,8 @@ MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
 
 
     columns(A:M, lst:LPI) : M ==
-      rs := [ acolumn(A,c) for c in lst ]
-      -- why no reverse here?
-      reduce(horizConcat, rs)
+      ls := [acolumn(A,c) for c in lst]
+      reduce(horizConcat, ls)
 
 
     -- Whats wrong here?

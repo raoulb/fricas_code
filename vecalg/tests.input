@@ -1,0 +1,168 @@
+va := vector(a)$VA(FRAC INT)
+vb := vector(b)$VA(FRAC INT)
+vc := vector(c)$VA(FRAC INT)
+vd := vector(d)$VA(FRAC INT)
+ve := vector(e)$VA(FRAC INT)
+vf := vector(f)$VA(FRAC INT)
+vg := vector(g)$VA(FRAC INT)
+vh := vector(h)$VA(FRAC INT)
+vi := vector(i)$VA(FRAC INT)
+v0 := vectorZero()$VA(FRAC INT)
+s0 := scalarZero()$VA(FRAC INT)
+
+-- Test some simple arithmetic
+-va
+
+-va + va
+
+va + vb
+
+va + vb + vc
+
+
+va * va
+
+va * vb
+
+
+va * vb * vc
+
+va * (vb * vc)
+
+(va * vb) * vc
+
+-- Properties
+isScalar? s0
+isVector? s0
+
+isScalar? v0
+isVector? v0
+
+isScalar? va
+isVector? va
+
+isScalar?(va*vb)
+isVector?(va*vb)
+
+isScalar?(va^vb)
+isVector?(va^vb)
+
+isScalar? s3p(va, vb, vc)
+isVector? s3p(va, vb, vc)
+
+-- Basic simplification
+simplify s0
+simplify v0
+
+simplify(va + va)
+simplify(va + vb)
+simplify(va + vb + vc)
+simplify(va + vb +va + vb + va)
+simplify(va - va)
+simplify(va - vb)
+simplify(vb - va)
+
+simplify(v0*v0)
+simplify(v0^v0)
+
+simplify(v0*va)
+simplify(v0^va)
+simplify(va^v0)
+
+simplify(va*va)
+simplify(va*vb)
+
+simplify(va^va)
+simplify(va^vb)
+simplify(vb^va)
+
+simplify(va^vb + vb^va)
+simplify(va^vb - vb^va)
+
+-- Axioms
+simplify(va^va)
+
+simplify(va*vb)
+simplify(vb*va)
+
+simplify(va^vb)
+simplify(-vb^va)
+
+simplify(s3p(va,vb,vc))
+simplify(s3p(vb,vc,va))
+simplify(s3p(vc,va,vb))
+simplify(-s3p(va,vc,vb))
+simplify(-s3p(vb,va,vc))
+simplify(-s3p(vc,vb,va))
+
+simplify(s3p(va,va,vb))
+simplify(s3p(va,vb,vb))
+simplify(s3p(va,vb,va))
+
+x := simplify(va^(vb^vc))
+y := simplify((va*vc)*vb - (va*vb)*vc)
+simplify(x-y)
+
+x := simplify((va^vb)*(vc^vd))
+y := simplify((va*vc)*(vb*vd) - (va*vd)*(vb*vc))
+simplify(x-y)
+
+x := simplify((va^vb)^(vc^vd))
+y := simplify(s3p(va,vb,vd)*vc -s3p(va,vb,vc)*vd)
+simplify(x-y)
+
+-- Check expansion rule applications
+
+-- 2.8
+x1 := s3p(va,vb,vc)*vd
+simplify(x1)
+applyRule(x1, "rule28")
+
+x2 := vd*s3p(va,vb,vc)
+simplify(x2)
+applyRule(x2, "rule28")
+
+simplify(x1-x2)
+
+-- 2.9
+x1 := s3p(va,vb,vc)*(vd^ve)
+simplify(x1)
+applyRule(x1, "rule29")
+
+x2 := (vd^ve)*s3p(va,vb,vc)
+simplify(x2)
+applyRule(x2, "rule29")
+
+simplify(x1-x2)
+
+-- 2.10
+x1 := (vd*ve)*s3p(va,vb,vc)
+simplify(x1)
+applyRule(x1, "rule210")
+
+x2 := s3p(va,vb,vc)*(vd*ve)
+simplify(x2)
+applyRule(x2, "rule210")
+
+simplify(x1-x2)
+
+-- 2.11
+x1 := s3p(va,vb,vc)*s3p(vd,ve,vf)
+simplify(x1)
+applyRule(x1, "rule211")
+
+x2 := s3p(vd,ve,vf)*s3p(va,vb,vc)
+simplify(x2)
+applyRule(x2, "rule211")
+
+simplify(x1-x2)
+
+
+-- A longer example
+x := s3p(va,vb,vc)*s3p(vd,ve,vf)*s3p(vg,vh,vi)
+xr := applyRule(x, "rule211")
+xrr := applyRule(xr, "rule210")
+xrrr := applyRule(xrr, "rule210")
+xrrrr := applyRule(xrrr, "rule210")
+xrrrrr := applyRule(xrrrr, "rule210")
+-- By each application we can double the expression size!

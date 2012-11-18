@@ -251,10 +251,10 @@ MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
     vertSplit(A:M, lr:LPI) : List M ==
       reduce("+", lr) ~= nrows(A) => error "split does not result in proper partition"
       l : List PI := cons(1, scan(_+, lr, 1$PI)$ListFunctions2(PI,PI))
-      mir := minr A
+      mir := minr(A) -1   -- additional shift because l starts at 1
       mic := minc A
       mac := maxc A
-      result := [ subMatrix(A, mir+l(i-1)-1, mir+l(i)-2, mic, mac) for i in 2..#l ]
+      result := [ subMatrix(A, mir+l(i-1), mir+l(i)-1, mic, mac) for i in 2..#l ]
 
 
     horizSplit(A:M, c:PI) : List M ==
@@ -271,8 +271,8 @@ MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
       l : List PI := cons(1, scan(_+, lc, 1$PI)$ListFunctions2(PI,PI))
       mir := minr A
       mar := maxr A
-      mic := minc A
-      result := [ subMatrix(A, mir, mar, mic+l(i-1)-1, mic+l(i)-2) for i in 2..#l ]
+      mic := minc(A) -1   -- additional shift because l starts at 1
+      result := [ subMatrix(A, mir, mar, mic+l(i-1), mic+l(i)-1) for i in 2..#l ]
 
 
     blockSplit(A:M, nr:PI, nc:PI) : List List M ==

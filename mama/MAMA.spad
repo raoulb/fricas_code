@@ -138,8 +138,6 @@ MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
     minc ==> minColIndex
     maxc ==> maxColIndex
 
-    cumSum(l: LI) : LI == (s:I:=0; [(s:=s+i) for i in l])
-
     element(A, r, c) ==
       matrix([[A(r,c)]])
 
@@ -187,12 +185,12 @@ MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
 
       if n >= 0 then
         dl := min(nc-n, nr)
-	sr := minr(A)
-	sc := minc(A) + n
+        sr := minr(A)
+        sc := minc(A) + n
       else
         dl := min(nc, nr-abs(n))
-	sr := minr(A) + abs(n)
-	sc := minc(A)
+        sr := minr(A) + abs(n)
+        sc := minc(A)
 
       for i in 0..(dl-1) repeat
         qsetelt!(B, sr+i, sc+i, A(sr+i, sc+i))
@@ -252,20 +250,11 @@ MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
 
     vertSplit(A:M, lr:LPI) : List M ==
       reduce("+", lr) ~= nrows(A) => error "split does not result in proper partition"
-
-      -- Could use a cumSum here
-      result : List M := empty()
-
+      l : List PI := cons(1, scan(_+, lr, 1$PI)$ListFunctions2(PI,PI))
+      mir := minr A
       mic := minc A
       mac := maxc A
-      a := minr A
-
-      for dr in lr repeat
-        b := a + dr - 1
-        result := cons(subMatrix(A, a, b, mic, mac), result)
-        a := b
-
-      result
+      result := [ subMatrix(A, mir+l(i-1)-1, mir+l(i)-2, mic, mac) for i in 2..#l ]
 
 
     horizSplit(A:M, c:PI) : List M ==
@@ -279,25 +268,11 @@ MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
 
     horizSplit(A:M, lc:LPI) : List M ==
       reduce("+", lc) ~= ncols(A) => error "split does not result in proper partition"
-
-      --l := cumSum(lc)
-      --mir := minr A
-      --mar := maxr A
-      --result := [ subMatrix(A, mir, mar, l(i), l(i+1)-1) for i in 0..(#l-1) ]
-
-      -- Could use a cumSum here
-      result : List M := empty()
-
+      l : List PI := cons(1, scan(_+, lc, 1$PI)$ListFunctions2(PI,PI))
       mir := minr A
       mar := maxr A
-      a := minc A
-
-      for dc in lc repeat
-        b := a + dc - 1
-        result := cons(subMatrix(A, mir, mar, a, b), result)
-        a := b
-
-      result
+      mic := minc A
+      result := [ subMatrix(A, mir, mar, mic+l(i-1)-1, mic+l(i)-2) for i in 2..#l ]
 
 
     blockSplit(A:M, nr:PI, nc:PI) : List List M ==

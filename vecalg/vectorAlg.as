@@ -173,7 +173,7 @@ Join(ExpressionType,VectorAlgCategory R)== add
     for ts in ss repeat{
       assert(empty? ts.vec);
       for tx in xx repeat{
-    --    assert(~empty? tx.vec);
+	-- assert(~empty? tx.vec);
         m:=[ts.coe*tx.coe, append(ts.sca,tx.sca), tx.vec]@Term;
         l:=cons(m,l);
       }
@@ -426,10 +426,10 @@ Join(ExpressionType,VectorAlgCategory R)== add
     }
   }
 
---------- The following programs deal with simplifications of vector expressions ---------
+  ---- The following programs deal with simplifications of vector expressions ----
 
 
-  --Mathematically, "order" means "not greater"--
+  ---- Mathematically, "order" means "not greater" ----
 
   local listOrder?(l1:List String, l2:List String): Boolean==
   {
@@ -638,7 +638,7 @@ Join(ExpressionType,VectorAlgCategory R)== add
   }
 
 
-  -------- implementations of reasoning rules -------------
+  ---- implementations of reasoning rules ----
 
   import from Set String;
   import from Set List String;
@@ -728,7 +728,7 @@ Join(ExpressionType,VectorAlgCategory R)== add
     true;
   }
 
-  -- we assume #pi.vec=2 --
+  -- we assume #pi.vec=2
   local cond11? (p1:Term,p2:Term,p3:Term):Boolean==
   {
     tt:Boolean:=(p1.coe=p2.coe or p1.coe=(-1)*p2.coe);
@@ -835,7 +835,7 @@ Join(ExpressionType,VectorAlgCategory R)== add
     distribute p;
   }
 
-  -- we assume #pi.vec=2 --
+  -- we assume #pi.vec=2
   local comb11(p1:Term, p2:Term, p3:Term):List Term==
   {
     l1:=p1.sca pretend Set List String;
@@ -872,7 +872,7 @@ Join(ExpressionType,VectorAlgCategory R)== add
     [p1,p2,p3];
   }
 
-  ---- "(abc)*d=(d.c)*(axb)+(d.a)*(bxc)+(d.b)*(cxa)" --
+  ---- (abc)*d = (d.c)*(axb) + (d.a)*(bxc) + (d.b)*(cxa) ----
 
   local rule01(yy:List Term, flag:Boolean==false):List Term ==
   {
@@ -919,7 +919,7 @@ Join(ExpressionType,VectorAlgCategory R)== add
     l;
   }
 
-  ---- "(abc)*(dxh)=[(b.d)(c.h)-(b.h)(c.d)]*a+[(c.d)(a.h)-(c.h)(a.d)]*b+[(a.d)(b.h)-(a.h)(b.d)]*c" --
+  ---- (abc)*(dxh) = [(b.d)(c.h)-(b.h)(c.d)]*a + [(c.d)(a.h)-(c.h)(a.d)]*b + [(a.d)(b.h)-(a.h)(b.d)]*c ----
 
   local rule02(yy:List Term, flag:Boolean==false):List Term ==
   {
@@ -970,7 +970,7 @@ Join(ExpressionType,VectorAlgCategory R)== add
     l;
   }
 
-  --- "(d.a)(hbc)+(d.b)(ahc)+(d.c)(abh)=(d.h)(abc)" ---
+  ---- (d.a)(hbc) + (d.b)(ahc) + (d.c)(abh) = (d.h)(abc) ----
 
   local rule03(yy:List Term):List Term ==
   {
@@ -1038,7 +1038,7 @@ Join(ExpressionType,VectorAlgCategory R)== add
     l;
   }
 
-  --- " (abc)(dgh)=[(bxc).(dxg)](a.h)+[(cxa).(dxg)](b.h)+[(axb).(dxg)](c.h) -----
+  ---- (abc)(dgh) = [(bxc).(dxg)](a.h) + [(cxa).(dxg)](b.h) + [(axb).(dxg)](c.h) ----
 
   local rule04(yy:List Term, flag:Boolean==false):List Term ==
   {
@@ -1090,7 +1090,7 @@ Join(ExpressionType,VectorAlgCategory R)== add
     l;
   }
 
-  --- "(d.a)*(bxc)+(d.b)*(cxa)+(d.c)*(axb)=(abc)*d" ---
+  ---- (d.a)*(bxc) + (d.b)*(cxa) + (d.c)*(axb) = (abc)*d ----
 
   local rule11(yy:List Term):List Term ==
   {
@@ -1146,7 +1146,7 @@ Join(ExpressionType,VectorAlgCategory R)== add
     l;
   }
 
-  --- "(d.h)(abc)=(d.a)(hbc)+(d.b)(ahc)+(d.c)(abh)" ---
+  ---- (d.h)(abc) = (d.a)(hbc) + (d.b)(ahc) + (d.c)(abh) ----
 
   local rule13(yy:List Term):List Term ==
   {
@@ -1183,10 +1183,5 @@ Join(ExpressionType,VectorAlgCategory R)== add
     }
     l;
   }
-
-
-
-
-
 
 }

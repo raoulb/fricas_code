@@ -125,6 +125,16 @@ MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
       ++ submatrices row and column wise, dividing
       ++ a matrix into blocks.
 
+    blockSplit : (M, LPI, PI) -> List List M
+      ++ \spad{blockSplit} splits a matrix into multiple
+      ++ submatrices row and column wise, dividing
+      ++ a matrix into blocks.
+
+    blockSplit : (M, PI, LPI) -> List List M
+      ++ \spad{blockSplit} splits a matrix into multiple
+      ++ submatrices row and column wise, dividing
+      ++ a matrix into blocks.
+
     blockSplit : (M, LPI, LPI) -> List List M
       ++ \spad{blockSplit} splits a matrix into multiple
       ++ submatrices row and column wise, dividing
@@ -132,6 +142,8 @@ MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
 
 
   Implementation ==> add
+
+    import ListFunctions2(List M, List M)
 
     minr ==> minRowIndex
     maxr ==> maxRowIndex
@@ -276,14 +288,17 @@ MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
 
 
     blockSplit(A:M, nr:PI, nc:PI) : List List M ==
-      error "Not implemented"
-      --map( (X:M):(List M) +-> horizSplit(X, nc)::(List M), vertSplit(A, nr))
-      --map( (X:M):(List M) +-> horizSplit(X, nc)::(List M), vertSplit(A, nr))$List(List(M))
+      --map( (X:M):(List M) +-> horizSplit(X, nc), vertSplit(A, nr) )
+      [ horizSplit(X, nc) for X in vertSplit(A, nr) ]
 
-      -- works fine in interpreter
-      --map(X+-> horizSplit(X, 3), vertSplit(m, 2))
+
+    blockSplit(A:M, lr:LPI, nc:PI) : List List M ==
+      [ horizSplit(X, nc) for X in vertSplit(A, lr) ]
+
+
+    blockSplit(A:M, nr:PI, lc:LPI) : List List M ==
+      [ horizSplit(X, lc) for X in vertSplit(A, nr) ]
 
 
     blockSplit(A:M, lr:LPI, lc:LPI) : List List M ==
-      error "Not implemented"
-      --map( (X:M):(List M) +-> horizSplit(X, lc)::(List M), vertSplit(A, lr))
+      [ horizSplit(X, lc) for X in vertSplit(A, lr) ]

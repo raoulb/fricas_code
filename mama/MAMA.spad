@@ -2,7 +2,7 @@
 )abbrev package MAMA MatrixManipulation
 ++ Author: Raoul Bourquin
 ++ Date Created: 17 November 2012
-++ Date Last Updated: 17 November 2012
+++ Date Last Updated: 30 November 2012
 ++ Description:
 ++ Some functions for manipulating (dense) matrices.
 ++ Supported are various kinds of slicing, splitting

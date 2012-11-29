@@ -62,7 +62,13 @@ vertSplit(E, [1,2,1])
 horizSplit(E, [2,2])
 --horizSplit(E, [2,1])
 
---blockSplit(E, 2,2)
---F := blockSplit(E, [1,2,1], [2,2])
+blockSplit(E, 2,2)
 
---zero?(blockCoancat(F) - E)
+F := blockSplit(E, [1,2,1], [2,2])
+zero?(blockConcat(F) - E)
+
+blockSplit(E, [2,1,1], 2)
+zero?(blockConcat(%) - E)
+
+blockSplit(E, 4, [2,2])
+zero?(blockConcat(%) - E)

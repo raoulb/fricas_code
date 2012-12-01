@@ -1,7 +1,7 @@
 )abbrev package MAMA MatrixManipulation
 ++ Author: Raoul Bourquin
 ++ Date Created: 17 November 2012
-++ Date Last Updated: 30 November 2012
+++ Date Last Updated: 1 December 2012
 ++ Description:
 ++ Some functions for manipulating (dense) matrices.
 ++ Supported are various kinds of slicing, splitting
@@ -26,15 +26,15 @@ MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
 
     -- Slicing matrices
 
-    -- How to call arow, acolumn? Name clashed with usual row, column
+    -- How to call aRow, aColumn? Name clashed with usual row, column
     -- Package call is ugly because of many parameters of MAMA
 
     element : (M, PI, PI) -> M
       ++ \spad{element} returns a single element out of a matrix.
       ++ The element is put into a one by one matrix.
 
-    arow : (M, PI) -> M
-      ++ \spad{arow} returns a single row out of a matrix.
+    aRow : (M, PI) -> M
+      ++ \spad{aRow} returns a single row out of a matrix.
       ++ The row is put into a one by N matrix.
 
     rows : (M, LPI) -> M
@@ -45,8 +45,8 @@ MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
       ++ \spad{rows} returns several rows out of a matrix.
       ++ The rows are stacked into a matrix.
 
-    acolumn : (M, PI) -> M
-      ++ \spad{acolumn} returns a single column out of a matrix.
+    aColumn : (M, PI) -> M
+      ++ \spad{aColumn} returns a single column out of a matrix.
       ++ The column is put into a one by N matrix.
 
     columns : (M, LPI) -> M
@@ -147,40 +147,53 @@ MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
     minc ==> minColIndex
     maxc ==> maxColIndex
 
+    -- Custom function to expand Segment(PositiveInteger) into List(PositiveInteger).
+    -- This operation is not supported by the overly restrictive library implementation.
+    expand(spi : SPI) : LPI ==
+        lr := empty()$LPI
+        l : PI := lo spi
+        h : PI := hi spi
+        inc : I := incr spi
+        zero? inc => error "Cannot expand a segment with an increment of zero"
+        if inc > 0 then
+          while l <= h repeat
+            lr := concat(l, lr)
+            l := qcoerce(l + inc)@PI
+        else
+          while l >= h repeat
+            lr := concat(l, lr)
+            l := qcoerce(l + inc)@PI
+        reverse! lr
+
+
     element(A, r, c) ==
       matrix([[A(r,c)]])
 
 
-    arow(A:M, r:PI) : M ==
+    aRow(A:M, r:PI) : M ==
       subMatrix(A, r, r, minc A, maxc A)
 
 
     rows(A:M, lst:LPI) : M ==
-      ls := [arow(A, r) for r in lst]
+      ls := [aRow(A, r) for r in lst]
       reduce(vertConcat, ls)
 
 
-    -- Whats wrong here?
     rows(A:M, si:SPI) : M ==
-      error "Not implemented"
-    --  rows(A, expand(si)::LPI)
-
-    -- Small issue: expand(SPI) ---> LI
+      rows(A, expand(si))
 
 
-    acolumn(A:M, c:PI) : M ==
+    aColumn(A:M, c:PI) : M ==
       subMatrix(A, minr A, maxr A, c, c)
 
 
     columns(A:M, lst:LPI) : M ==
-      ls := [acolumn(A,c) for c in lst]
+      ls := [aColumn(A,c) for c in lst]
       reduce(horizConcat, ls)
 
 
-    -- Whats wrong here?
     columns(A:M, si:SPI) : M ==
-      error "Not implemented"
-    --  columns(A, expand(si)::LPI)
+      columns(A, expand(si))
 
 
     diagonalMatrix(A, n) ==

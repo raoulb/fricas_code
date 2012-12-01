@@ -298,20 +298,21 @@ MatrixManipulation(R, Row, Col, M) : Exports == Implementation where
 
 
     blockSplit(A:M, nr:PI, nc:PI) : List List M ==
-      map( (X:M):(List M) +-> horizSplit(X, nc), vertSplit(A, nr) )$ListFunctions2(M, List M)
-      --[ horizSplit(X, nc) for X in vertSplit(A, lr) ]
+      -- The map version does not work with OpenAxiom.
+      --map( (X:M):(List M) +-> horizSplit(X, nc), vertSplit(A, nr) )$ListFunctions2(M, List M)
+      [ horizSplit(X, nc) for X in vertSplit(A, nr) ]
 
 
     blockSplit(A:M, lr:LPI, nc:PI) : List List M ==
-      map( (X:M):(List M) +-> horizSplit(X, nc), vertSplit(A, lr) )$ListFunctions2(M, List M)
-      --[ horizSplit(X, nc) for X in vertSplit(A, lr) ]
+      --map( (X:M):(List M) +-> horizSplit(X, nc), vertSplit(A, lr) )$ListFunctions2(M, List M)
+      [ horizSplit(X, nc) for X in vertSplit(A, lr) ]
 
 
     blockSplit(A:M, nr:PI, lc:LPI) : List List M ==
-      map( (X:M):(List M) +-> horizSplit(X, lc), vertSplit(A, nr) )$ListFunctions2(M, List M)
-      --[ horizSplit(X, lc) for X in vertSplit(A, nr) ]
+      --map( (X:M):(List M) +-> horizSplit(X, lc), vertSplit(A, nr) )$ListFunctions2(M, List M)
+      [ horizSplit(X, lc) for X in vertSplit(A, nr) ]
 
 
     blockSplit(A:M, lr:LPI, lc:LPI) : List List M ==
-      map( (X:M):(List M) +-> horizSplit(X, lc), vertSplit(A, lr) )$ListFunctions2(M, List M)
-      --[ horizSplit(X, lc) for X in vertSplit(A, lr) ]
+      --map( (X:M):(List M) +-> horizSplit(X, lc), vertSplit(A, lr) )$ListFunctions2(M, List M)
+      [ horizSplit(X, lc) for X in vertSplit(A, lr) ]

@@ -509,26 +509,26 @@ Join(ExpressionType,VectorAlgCategory R)== add
     t1.coe=t2.coe and dblListEq?(t1.sca,t2.sca) and listEq?(t1.vec,t2.vec);
   }
 
-  local permute4():List List MI==
-  {
-    import from Set MI,List MI,List List MI;
-    a:Set MI:=[1,2,3,4];
-    out:List List MI:=empty;
-    for i in a repeat
-    {
-      for j in a-([i] @ Set MI) repeat
-      {
-        for k in a-([i,j] @ Set MI) repeat
-        {
-          for l in a-([i,j,k] @ Set MI) repeat
-          {
-            out:=cons([i,j,k,l],out);
-          }
-        }
-      }
-    }
-    out;
-  }
+  -- local permute4():List List MI==
+  -- {
+  --   import from Set MI,List MI,List List MI;
+  --   a:Set MI:=[1,2,3,4];
+  --   out:List List MI:=empty;
+  --   for i in a repeat
+  --   {
+  --     for j in a-([i] @ Set MI) repeat
+  --     {
+  --       for k in a-([i,j] @ Set MI) repeat
+  --       {
+  --         for l in a-([i,j,k] @ Set MI) repeat
+  --         {
+  --           out:=cons([i,j,k,l],out);
+  --         }
+  --       }
+  --     }
+  --   }
+  --   out;
+  -- }
 
   simplify(x:%, flag:Boolean==false):%==
   {

@@ -15,6 +15,10 @@ SetTools(S : SetCategory) : Exports == Implementation where
       ++ \spad{coerce} converts a (finite) set to a list.
       -- I'm sure there are better ways to do this. How?
 
+    union : List(Set(S)) -> Set(S)
+      ++ \spad{union} constructs the union of a list of sets
+
+
   Implementation == add
 
     setsGcd(ls:List Set S) : Set S ==
@@ -41,3 +45,7 @@ SetTools(S : SetCategory) : Exports == Implementation where
         alist := cons(extract!(aset), alist)
 
       alist
+
+
+    union(ls: List(Set(S))) : Set(S) ==
+      reduce(union, ls)

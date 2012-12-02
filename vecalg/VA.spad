@@ -850,9 +850,9 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
     match210inv?(t1:scaTerm, t2:scaTerm, t3:scaTerm) : Boolean ==
       -- Check if the coefficients allow for a match
       not(
-	  (t2.coe2 = t1.coe2 or t2.coe2 = -t1.coe2)
-	  and
-	  (t3.coe2 = t1.coe2 or t3.coe2 = -t1.coe2)
+          (t2.coe2 = t1.coe2 or t2.coe2 = -t1.coe2)
+          and
+          (t3.coe2 = t1.coe2 or t3.coe2 = -t1.coe2)
       ) => false
 
       l1 := set(t1.sca2)
@@ -869,7 +869,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       ll2 := coerce(s2)$SetTools(List String)
       ll3 := coerce(s3)$SetTools(List String)
       not(
-	  #ll1 = 2 and #ll2 = 2 and #ll3 = 2
+          #ll1 = 2 and #ll2 = 2 and #ll3 = 2
           and
           #ll1(1) * #ll1(2) = 6 and #ll2(1) * #ll2(2) = 6 and #ll3(1) * #ll3(2) = 6
       ) => false
@@ -898,14 +898,14 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
         #ispp = 1 and #itpp = 1
         and
         difference(uspp, ispp) = difference(utpp, itpp)
-	and
+        and
         #difference(uspp, ispp) = 3
       ) => false
 
       -- Finally, the conditions to apply the rule is fulfilled
       -- for the given three terms!
       -- Extract the parts (this is not necessary anymore, right?)
-      -- abc := coerce(difference(utpp, ispp)$Set(String))$SetTools(String)
+      -- abc := coerce(difference(utpp, ispp))$SetTools(String)
       -- a := abc(1)
       -- b := abc(2)
       -- c := abc(3)
@@ -921,13 +921,26 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
     rule210inv(x:Rep) : Rep ==
       ++ This rule implements the contraction according to the axiom
       ++ (d*a)(hbc) + (d*b)(ahc) + (d*c)(abh) = (d*h)(abc)
+      xx := normalForm(x)
 
-      x
+      -- Less than 3 term? No chance to ever apply the rule
+      #xx <3 => xx
 
+      -- Transform the representation into a List of mixTerm items
+      t0 := first xx
+      others := rest xx
 
+      lo : List mixTerm := [ [[[t0.coe, t0.sca]], t0.vec] ]
 
+      for tx in others repeat
+        ct := first lo
+        if listEq?(ct.vec2, tx.vec) then
+          lo := cons([cons([tx.coe,tx.sca],ct.scal), ct.vec2], rest lo)
+        else
+          lo := cons( [[[tx.coe,tx.sca]],tx.vec], lo)
 
-
+      -- See what we can do now
+      result : Rep := empty()
 
 
 
@@ -957,6 +970,8 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       (rule="rule29")@Boolean => per rule29(rep x)
       (rule="rule210")@Boolean => per rule210(rep x)
       (rule="rule211")@Boolean => per rule211(rep x)
+
+      (rule="rule210inv")@Boolean => per rule210inv(rep x)
       -- Specified rule not valid
       x
 

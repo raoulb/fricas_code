@@ -16,10 +16,14 @@ SetTools(S : SetCategory) : Exports == Implementation where
     setsGcd(ls:List Set S) : Set S ==
       #ls = 1 => first ls
 
-      mcs := first ls
-      others := rest ls
+      --mcs := first ls
+      --others := rest ls
 
-      for s in others repeat
-        mcs := difference(union(mcs,s), symmetricDifference(mcs,s))
+      -- for s in others repeat
+      --   mcs := difference(union(mcs,s), symmetricDifference(mcs,s))
 
-      mcs
+      --for s in others repeat
+      --  mcs := intersect(mcs, s)
+
+      --mcs
+      reduce(intersect, ls)

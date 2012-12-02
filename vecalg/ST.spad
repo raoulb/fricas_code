@@ -11,6 +11,10 @@ SetTools(S : SetCategory) : Exports == Implementation where
     setsGcd : List(Set(S)) -> Set(S)
       ++ \spad{setsGcd} computes the maximal common subset of a list of sets.
 
+    coerce : Set(S) -> List(S)
+      ++ \spad{coerce} converts a (finite) set to a list.
+      -- I'm sure there are better ways to do this. How?
+
   Implementation == add
 
     setsGcd(ls:List Set S) : Set S ==
@@ -27,3 +31,13 @@ SetTools(S : SetCategory) : Exports == Implementation where
 
       --mcs
       reduce(intersect, ls)
+
+
+    coerce(theset: Set S) : List S ==
+      aset := copy(theset)
+      alist : List S := empty()
+
+      while not empty? aset repeat
+        alist := cons(extract!(aset), alist)
+
+      alist

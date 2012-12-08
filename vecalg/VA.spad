@@ -923,8 +923,8 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       ++ (d*a)(hbc) + (d*b)(ahc) + (d*c)(abh) = (d*h)(abc)
       xx := normalForm(x)
 
-      -- Less than 3 term? No chance to ever apply the rule
-      #xx <3 => xx
+      -- Less than 3 terms? No chance to ever apply the rule
+      #xx < 3 => xx
 
       -- Transform the representation into a List of mixTerm items
       t0 := first xx
@@ -937,14 +937,53 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
         if listEq?(ct.vec2, tx.vec) then
           lo := cons([cons([tx.coe,tx.sca],ct.scal), ct.vec2], rest lo)
         else
-          lo := cons( [[[tx.coe,tx.sca]],tx.vec], lo)
+          lo := cons([[[tx.coe,tx.sca]],tx.vec], lo)
 
       -- See what we can do now
       result : Rep := empty()
 
+      for tx in lo repeat
+        L : scaList := tx.scal
+        n := #L
+        -- Not enough scalar parts in this mixTerm, we can not apply the rule
+        n < 3 => result := append(result, distribute(tx))
 
+        keepTerms : scaList := empty()
 
+        -- Which terms do we have to analyse in detail?
+        for i in 1..n repeat
+          if empty? L(i).sca2 or #(last L(i).sca2) < 3 then
+            result := append(result, distribute [[L(i)], tx.vec2])
+          else
+            keepTerms := cons(L(i), keepTerms)
 
+        -- For the remaining terms we can try to match the rule
+        n := #keepTerms
+        matched : Boolean := false
+
+        while n > 2 repeat
+          for i in 1..(n-2) repeat
+            for j in (i+1)..(n-1) repeat
+              for k in (j+1)..n repeat
+                if match210inv?(keepTerms(i), keepTerms(j), keepTerms(k)) then
+                  match : scaList := [keepTerms(i), keepTerms(j), keepTerms(k)]
+                  others : scaList := append([keepTerms(s) for s in 1..(i-1)],[keepTerms(s) for s in (i+1)..(j-1)])
+                  others := append(others, [keepTerms(s) for s in (j+1)..(k-1)])
+                  others := append(others, [keepTerms(s) for s in (k+1)..n])
+                  matched := true
+                  break
+              if matched then break
+            if matched then break
+
+          not matched => break
+          result := append(result, combine210inv [match, tx.vec2])
+          n := #others
+
+        -- Keep scalar left-overs and append them to the result
+        if ~empty? keepTerms then
+          result := append(result, distribute [keepTerms, tx.vec2])
+
+      result
 
 
     -- Simplification routines

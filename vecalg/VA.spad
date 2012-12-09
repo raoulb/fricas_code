@@ -849,6 +849,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
 
     match210inv?(t1:scaTerm, t2:scaTerm, t3:scaTerm) : Boolean ==
       -- Check if the coefficients allow for a match
+      -- TODO: Compute gcd and split
       not(
           (t2.coe2 = t1.coe2 or t2.coe2 = -t1.coe2)
           and
@@ -1013,8 +1014,8 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       result : Rep := empty()
 
       for tx in lo repeat
-        L : scaList := tx.scal
-        n := #L
+        terms : scaList := tx.scal
+        n := #terms
         -- Not enough scalar parts in this mixTerm, we can not apply the rule
         n < 3 => result := append(result, distribute(tx))
 
@@ -1022,38 +1023,39 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
 
         -- Which terms do we have to analyse in detail?
         for i in 1..n repeat
-          if empty? L(i).sca2 or #(last L(i).sca2) < 3 then
-            result := append(result, distribute [[L(i)], tx.vec2])
-            true
+          if empty? terms(i).sca2 or #(last terms(i).sca2) < 3 then
+            result := append(result, distribute [[terms(i)], tx.vec2])
           else
-            keepTerms := cons(L(i), keepTerms)
+            keepTerms := cons(terms(i), keepTerms)
+        terms := keepTerms
 
         -- For the remaining terms we can try to match the rule
-        n := #keepTerms
-        matched : Boolean := false
+        n := #terms
 
         while n > 2 repeat
           for i in 1..(n-2) repeat
             for j in (i+1)..(n-1) repeat
               for k in (j+1)..n repeat
-                if match210inv?(keepTerms(i), keepTerms(j), keepTerms(k)) then
-                  match : scaList := [keepTerms(i), keepTerms(j), keepTerms(k)]
-                  others : scaList := append([keepTerms(s) for s in 1..(i-1)],
-		                             [keepTerms(s) for s in (i+1)..(j-1)])
-                  others := append(others, [keepTerms(s) for s in (j+1)..(k-1)])
-                  others := append(others, [keepTerms(s) for s in (k+1)..n])
+                matched : Boolean := false
+                if match210inv?(terms(i), terms(j), terms(k)) then
+                  match : scaList := [terms(i), terms(j), terms(k)]
+                  others : scaList := append([terms(s) for s in 1..(i-1)],
+                                             [terms(s) for s in (i+1)..(j-1)])
+                  others := append(others, [terms(s) for s in (j+1)..(k-1)])
+                  others := append(others, [terms(s) for s in (k+1)..n])
+                  terms := others
                   matched := true
                   break
               if matched then break
             if matched then break
 
           not matched => break
-          result := append(result, combine210inv [match, tx.vec2])
-          n := #others
+          result := append(result, combine210inv([match, tx.vec2]))
+          n := #terms
 
-        -- Keep scalar left-overs and append them to the result
-        if ~empty? others then
-          result := append(result, distribute([others, tx.vec2]))
+        -- Keep left-overs and append them to the result
+        if ~empty? terms then
+          result := append(result, distribute([terms, tx.vec2]))
 
       result
 

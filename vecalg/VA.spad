@@ -849,7 +849,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
 
     match210inv?(t1:scaTerm, t2:scaTerm, t3:scaTerm) : Boolean ==
       -- Check if the coefficients allow for a match
-      -- TODO: Compute gcd and split
+      -- TODO: Try to split by minimal coefficient
       not(
           (t2.coe2 = t1.coe2 or t2.coe2 = -t1.coe2)
           and
@@ -918,6 +918,17 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
         ~ termEq?(t1, t2) => return false
 
       true
+
+
+    -- split210inv(t1:scaTerm, t2:scaTerm, t3:scaTerm) : List scaList ==
+    --   c1 := t1.coe2
+    --   c2 := t2.coe2
+    --   c3 := t3.coe2
+    --   m := min(min(c1,c2),c3)
+    --   r1 := c1 - m
+    --   r2 := c2 - m
+    --   r3 := c3 - m
+    --   [[[m,t1.sca2],[m,t2.sca2],[m,t3.sca2]], [[r1,t1.sca2],[r2,t2.sca2],[r3,t3.sca2]]]
 
 
     combine210inv(mt:mixTerm) : List Term ==
@@ -1039,8 +1050,13 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
                 matched : Boolean := false
                 if match210inv?(terms(i), terms(j), terms(k)) then
                   match : scaList := [terms(i), terms(j), terms(k)]
-                  others : scaList := append([terms(s) for s in 1..(i-1)],
-                                             [terms(s) for s in (i+1)..(j-1)])
+                  others : scaList := empty()
+                  --st := split210inv(terms(i), terms(j), terms(k))
+                  --print(st::OutputForm)
+                  --match : scaList := st(1)
+                  --others : scaList := st(2)
+                  others := append([terms(s) for s in 1..(i-1)],
+                                   [terms(s) for s in (i+1)..(j-1)])
                   others := append(others, [terms(s) for s in (j+1)..(k-1)])
                   others := append(others, [terms(s) for s in (k+1)..n])
                   terms := others

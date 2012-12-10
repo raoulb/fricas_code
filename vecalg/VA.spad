@@ -70,6 +70,9 @@ VectorAlgebraCategory(R : Field) : Category == VectorSpaceCategory(R) with
 
     zero?: % -> Boolean
 
+    coerce: R -> %
+      ++ Make scalar vector algebra expressions out of base field elements
+
     "*": (%, %) -> %
       ++ Dot/scalar product
       -- Possible confusion with inherited r:R*v:% from VSC?
@@ -179,6 +182,9 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       -- TODO: Fix "0" string here
 
     vector(x:Symbol) : % == per [ [1::R, [], [string x]] ]
+
+    coerce(r:R) : % ==
+      per [ [r::R, [], []] ]
 
 
     -- Check a term for being zero

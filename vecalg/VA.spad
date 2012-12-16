@@ -165,7 +165,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       lt : List Term := empty()
       for t in mt.scal repeat
         lt := cons([t.coe2, t.sca2, mt.vec2], lt)
-      lt
+      reverse! lt
 
     -- Extract single parts out of terms
     -- Do we really need this?
@@ -855,12 +855,12 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
 
     match210inv?(t1:scaTerm, t2:scaTerm, t3:scaTerm) : Boolean ==
       -- Check if the coefficients allow for a match
-      -- TODO: Try to split by minimal coefficient
-      not(
-          (t2.coe2 = t1.coe2 or t2.coe2 = -t1.coe2)
-          and
-          (t3.coe2 = t1.coe2 or t3.coe2 = -t1.coe2)
-      ) => false
+      -- No, better try to split by minimal common coefficient
+      -- not(
+      --     (t2.coe2 = t1.coe2 or t2.coe2 = -t1.coe2)
+      --     and
+      --     (t3.coe2 = t1.coe2 or t3.coe2 = -t1.coe2)
+      -- ) => false
 
       l1 := set(t1.sca2)
       l2 := set(t2.sca2)
@@ -926,15 +926,73 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       true
 
 
-    -- split210inv(t1:scaTerm, t2:scaTerm, t3:scaTerm) : List scaList ==
-    --   c1 := t1.coe2
-    --   c2 := t2.coe2
-    --   c3 := t3.coe2
-    --   m := min(min(c1,c2),c3)
-    --   r1 := c1 - m
-    --   r2 := c2 - m
-    --   r3 := c3 - m
-    --   [[[m,t1.sca2],[m,t2.sca2],[m,t3.sca2]], [[r1,t1.sca2],[r2,t2.sca2],[r3,t3.sca2]]]
+    import ToolsForSign(R)
+
+
+    split210inv(t1:scaTerm, t2:scaTerm, t3:scaTerm) : List scaList ==
+      c1 := t1.coe2
+      c2 := t2.coe2
+      c3 := t3.coe2
+
+      ss1 := sign(c1)
+      ss2 := sign(c2)
+      ss3 := sign(c3)
+
+      if (ss1 case Integer) and (ss2 case Integer) and (ss3 case Integer) then
+        -- TODO: How to get rid of the pretends?
+        s1 :R := (ss1 pretend INT)::R
+        s2 :R := (ss2 pretend INT)::R
+        s3 :R := (ss3 pretend INT)::R
+        signsOk := true
+      else
+        signsOk := false
+
+      -- Check if all three terms are the same
+      if (c1 = c2 or c1 = -c2) and (c2 = c3 or c2 = -c3) then
+        m1 : R := c1
+        m2 : R := c2
+        m3 : R := c3
+      -- At least two are the same
+      else if (c1 = c2) or (c1 = -c2) then
+        m1 : R := c1
+        m2 : R := c2
+        m3 : R := c1 / s1 * s3
+      else if (c1 = c3) or (c1 = -c3) then
+        m1 : R := c1
+        m2 : R := c1 / s1 * s2
+        m3 : R := c3
+      else if (c2 = c3) or (c2 = -c3) then
+        m1 : R := c2 / s2 * s1
+        m2 : R := c2
+        m3 : R := c3
+      -- All are different
+      else
+        m1 : R := c1 / s1 * s1
+        m2 : R := c1 / s1 * s2
+        m3 : R := c1 / s1 * s3
+
+      if not signsOk then
+        -- Reset and give up
+        m1 : R := c1
+        m2 : R := c2
+        m3 : R := c3
+
+      -- Common expression terms
+      c : scaList := [[m1,t1.sca2],[m2,t2.sca2],[m3,t3.sca2]]
+
+      -- Remainder terms
+      r1 := c1 - m1
+      r2 := c2 - m2
+      r3 := c3 - m3
+      r : scaList := []
+      if ~zero? r1 then
+        r := cons([r1,t1.sca2], r)
+      if ~zero? r2 then
+        r := cons([r2,t2.sca2], r)
+      if ~zero? r3 then
+        r := cons([r3,t3.sca2], r)
+
+      [c, r]
 
 
     combine210inv(mt:mixTerm) : List Term ==
@@ -987,22 +1045,54 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       tp3 : Term := [co, append([[d,c],[a,b,h]],lli), mt.vec2]
       same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[a,b,c]],lli), mt.vec2]]
 
-      tp1 : Term := [co, append([[h,a],[d,b,c]],lli), mt.vec2]
-      tp2 : Term := [co, append([[h,b],[a,d,c]],lli), mt.vec2]
-      tp3 : Term := [co, append([[h,c],[a,b,d]],lli), mt.vec2]
-      same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[h,d],[a,b,c]],lli), mt.vec2]]
-
       tp1 : Term := [co, append([[d,a],[h,c,b]],lli), mt.vec2]
       tp2 : Term := [co, append([[d,c],[a,h,b]],lli), mt.vec2]
       tp3 : Term := [co, append([[d,b],[a,c,h]],lli), mt.vec2]
       same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[a,c,b]],lli), mt.vec2]]
 
-      tp1 : Term := [co, append([[h,a],[d,c,b]],lli), mt.vec2]
-      tp2 : Term := [co, append([[h,c],[a,d,b]],lli), mt.vec2]
-      tp3 : Term := [co, append([[h,b],[a,c,d]],lli), mt.vec2]
-      same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[h,d],[a,c,b]],lli), mt.vec2]]
+      tp1 : Term := [co, append([[d,b],[h,a,c]],lli), mt.vec2]
+      tp2 : Term := [co, append([[d,a],[b,h,c]],lli), mt.vec2]
+      tp3 : Term := [co, append([[d,c],[b,a,h]],lli), mt.vec2]
+      same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[b,a,c]],lli), mt.vec2]]
 
-      -- Otherwise just distribute it (is this ok?)
+      tp1 : Term := [co, append([[d,b],[h,c,a]],lli), mt.vec2]
+      tp2 : Term := [co, append([[d,c],[b,h,a]],lli), mt.vec2]
+      tp3 : Term := [co, append([[d,a],[b,c,h]],lli), mt.vec2]
+      same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[b,c,a]],lli), mt.vec2]]
+
+      tp1 : Term := [co, append([[d,c],[h,a,b]],lli), mt.vec2]
+      tp2 : Term := [co, append([[d,a],[c,h,b]],lli), mt.vec2]
+      tp3 : Term := [co, append([[d,b],[c,a,h]],lli), mt.vec2]
+      same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[c,a,b]],lli), mt.vec2]]
+
+      tp1 : Term := [co, append([[d,c],[h,b,a]],lli), mt.vec2]
+      tp2 : Term := [co, append([[d,b],[c,h,a]],lli), mt.vec2]
+      tp3 : Term := [co, append([[d,a],[c,b,h]],lli), mt.vec2]
+      same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[c,b,a]],lli), mt.vec2]]
+
+      -- Original code
+
+      -- tp1 : Term := [co, append([[d,a],[h,b,c]],lli), mt.vec2]
+      -- tp2 : Term := [co, append([[d,b],[a,h,c]],lli), mt.vec2]
+      -- tp3 : Term := [co, append([[d,c],[a,b,h]],lli), mt.vec2]
+      -- same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[a,b,c]],lli), mt.vec2]]
+
+      -- tp1 : Term := [co, append([[h,a],[d,b,c]],lli), mt.vec2]
+      -- tp2 : Term := [co, append([[h,b],[a,d,c]],lli), mt.vec2]
+      -- tp3 : Term := [co, append([[h,c],[a,b,d]],lli), mt.vec2]
+      -- same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[h,d],[a,b,c]],lli), mt.vec2]]
+
+      -- tp1 : Term := [co, append([[d,a],[h,c,b]],lli), mt.vec2]
+      -- tp2 : Term := [co, append([[d,c],[a,h,b]],lli), mt.vec2]
+      -- tp3 : Term := [co, append([[d,b],[a,c,h]],lli), mt.vec2]
+      -- same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[a,c,b]],lli), mt.vec2]]
+
+      -- tp1 : Term := [co, append([[h,a],[d,c,b]],lli), mt.vec2]
+      -- tp2 : Term := [co, append([[h,c],[a,d,b]],lli), mt.vec2]
+      -- tp3 : Term := [co, append([[h,b],[a,c,d]],lli), mt.vec2]
+      -- same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[h,d],[a,c,b]],lli), mt.vec2]]
+
+      -- Otherwise just distribute it
       distribute(mt)
 
 
@@ -1055,14 +1145,13 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
               for k in (j+1)..n repeat
                 matched : Boolean := false
                 if match210inv?(terms(i), terms(j), terms(k)) then
-                  match : scaList := [terms(i), terms(j), terms(k)]
-                  others : scaList := empty()
-                  --st := split210inv(terms(i), terms(j), terms(k))
-                  --print(st::OutputForm)
-                  --match : scaList := st(1)
-                  --others : scaList := st(2)
-                  others := append([terms(s) for s in 1..(i-1)],
-                                   [terms(s) for s in (i+1)..(j-1)])
+                  --match : scaList := [terms(i), terms(j), terms(k)]
+                  --others : scaList := empty()
+                  st := split210inv(terms(i), terms(j), terms(k))
+                  match : scaList := st(1)
+                  others : scaList := st(2)
+                  others := append(others, [terms(s) for s in 1..(i-1)])
+                  others := append(others, [terms(s) for s in (i+1)..(j-1)])
                   others := append(others, [terms(s) for s in (j+1)..(k-1)])
                   others := append(others, [terms(s) for s in (k+1)..n])
                   terms := others
@@ -1099,8 +1188,6 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
 
     applyRule(x:%, rule:String) : % ==
       ++ Central rule dispatcher
-      --(rule="rule01")@Boolean => per rule01(rep x)
-      --(rule="rule02")@Boolean => per rule02(rep x)
       (rule="rule28")@Boolean => per rule28(rep x)
       (rule="rule29")@Boolean => per rule29(rep x)
       (rule="rule210")@Boolean => per rule210(rep x)

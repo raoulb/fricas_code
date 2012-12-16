@@ -1,0 +1,104 @@
+va := vector(a)$VA(FRAC INT)
+vb := vector(b)$VA(FRAC INT)
+vc := vector(c)$VA(FRAC INT)
+vd := vector(d)$VA(FRAC INT)
+ve := vector(e)$VA(FRAC INT)
+vf := vector(f)$VA(FRAC INT)
+vg := vector(g)$VA(FRAC INT)
+vh := vector(h)$VA(FRAC INT)
+vi := vector(i)$VA(FRAC INT)
+
+v0 := vectorZero()$VA(FRAC INT)
+s0 := scalarZero()$VA(FRAC INT)
+
+
+V1 := (vd*va)*s3p(vh,vb,vc)
+V2 := (vd*vb)*s3p(va,vh,vc)
+V3 := (vd*vc)*s3p(va,vb,vh)
+
+
+-- All coefficients the same
+
+VV := V1 + V2 + V3
+applyRule(VV, "rule210inv")
+
+VV := V1 + V2 + V3 + V3 + V2 + V1
+applyRule(VV, "rule210inv")
+--simplify(%)
+
+VV := 3*V1 + 3*V2 + 3*V3
+applyRule(VV, "rule210inv")
+
+
+-- All coefficients the same up to sign
+
+VV := - V1 + V2 + V3
+applyRule(VV, "rule210inv")
+
+VV :=   V1 - V2 + V3
+applyRule(VV, "rule210inv")
+
+VV :=   V1 + V2 - V3
+applyRule(VV, "rule210inv")
+
+VV := - V1 - V2 + V3
+applyRule(VV, "rule210inv")
+
+VV := - V1 + V2 - V3
+applyRule(VV, "rule210inv")
+
+VV :=   V1 - V2 - V3
+applyRule(VV, "rule210inv")
+
+VV := - V1 - V2 - V3
+applyRule(VV, "rule210inv")
+
+
+-- Only two coefficients the same
+
+VV := 2*V1 + 2*V2 + 3*V3
+applyRule(VV, "rule210inv")
+
+VV := 2*V1 + 3*V2 + 2*V3
+applyRule(VV, "rule210inv")
+
+VV := 3*V1 + 2*V2 + 2*V3
+applyRule(VV, "rule210inv")
+
+
+-- Only two coefficients the same up to sign
+
+VV := 2*V1 + -2*V2 + 3*V3
+applyRule(VV, "rule210inv")
+
+VV := 2*V1 + 3*V2 + -2*V3
+applyRule(VV, "rule210inv")
+
+VV := 3*V1 + 2*V2 + -2*V3
+applyRule(VV, "rule210inv")
+
+
+VV := -2*V1 + 2*V2 + 3*V3
+applyRule(VV, "rule210inv")
+
+VV := -2*V1 + 3*V2 + 2*V3
+applyRule(VV, "rule210inv")
+
+VV := 3*V1 + -2*V2 + 2*V3
+applyRule(VV, "rule210inv")
+
+
+VV := -2*V1 + -2*V2 + 3*V3
+applyRule(VV, "rule210inv")
+
+VV := -2*V1 + 3*V2 + -2*V3
+applyRule(VV, "rule210inv")
+
+VV := 3*V1 + -2*V2 + -2*V3
+applyRule(VV, "rule210inv")
+
+
+-- All coefficients different
+
+VV := 1*V1 + 2*V2 + 3*V3
+applyRule(VV, "rule210inv")

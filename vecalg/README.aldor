@@ -1,0 +1,7 @@
+First compile the library with:
+
+  aldor vectorAlg.as 
+
+Then run the example code with:
+
+  aldor -G interp vectorAlg_examples.as

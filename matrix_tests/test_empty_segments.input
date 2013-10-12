@@ -1,0 +1,63 @@
+-- Test matrix read and write slicing
+--
+-- The current implementation supports for
+-- the row and column slicer:
+--
+--            +-----+----------+-----+----------+
+--            | INT | LIST INT | SEG | LIST SEG |
+-- +----------+-----+----------+-----+----------+
+-- | INT      | r   | r        | r   | r        |
+-- | LIST INT | r   | r        | r   | r        |
+-- | SEG      | r   | r        | r   | r        |
+-- | LIST SEG | r   | r        | r   | r        |
+-- +----------+-----+----------+-----+----------+
+
+m := matrix([[1,2,3],[4,5,6],[7,8,9],[10,11,12]])
+
+es := 3..1
+eli := []::List(Integer)
+els := []::List(Segment(Integer))
+
+-- INT, INT
+
+-- INT, LIST INT and LIST INT, INT
+
+-- INT, SEG and SEG, INT
+u := m(1, es)
+[nrows u, ncols u]
+u := m(es, 1)
+[nrows u, ncols u]
+
+-- INT, LIST SEG and LIST SEG, INT
+u := m(1, [es])
+[nrows u, ncols u]
+u := m([es], 1)
+[nrows u, ncols u]
+
+-- SEG, SEG
+u := m(es, es)
+[nrows u, ncols u]
+
+-- LIST INT, LIST INT
+
+-- LIST INT, SEG and SEG, LIST INT
+u := m(es, [1,2])
+[nrows u, ncols u]
+u := m([1,2], es)
+[nrows u, ncols u]
+
+-- LIST INT, LIST SEG and LIST SEG, LIST INT
+u := m([1,2], [es])
+[nrows u, ncols u]
+u := m([es], [1,2])
+[nrows u, ncols u]
+
+-- LIST SEG, SEG and SEG, LIST SEG
+u := m([es], es)
+[nrows u, ncols u]
+u := m(es, [es])
+[nrows u, ncols u]
+
+-- LIST SEG, LIST SEG
+u := m([es,es], [es,es])
+[nrows u, ncols u]

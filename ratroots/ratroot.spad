@@ -1,0 +1,71 @@
+<<package RATROOT RationalRoots>>=
+)abbrev package RATROOT RationalRoots
+++
+RationalRoots(R) : Exports == Implementation where
+  R : Join(EuclideanDomain, Comparable, CharacteristicZero,
+           RetractableTo Integer, LinearlyExplicitRingOver Integer)
+  F ==> Expression(R)
+
+  N   ==> NonNegativeInteger
+  Z   ==> Integer
+  Q   ==> Fraction(Z)
+  SE  ==> Symbol
+  LF  ==> List F
+  K   ==> Kernel F
+  P   ==> SparseMultivariatePolynomial(R, K)
+  UP  ==> SparseUnivariatePolynomial F
+  RF  ==> Fraction UP
+
+  FP ==> Polynomial(F)
+  FRF ==> Fraction(FP)
+
+  Exports ==> with
+
+    get_rational_solutions: (Equation(FRF), SE, SE) -> List(Q)
+      ++
+
+    get_rational_solutions2: (F, K) -> List(Q)
+      ++
+
+  Implementation ==> add
+
+    UPZ ==> SparseUnivariatePolynomial(Z)
+
+    get_rational_solutions2(eq1f : F, k1 : K) : List(Q) ==
+        eq2p := numer(univariate(eq1f, k1))$RF
+        nn := degree(eq2p) +$N 1
+        vv := vectorise(eq2p, nn)
+        vm := matrix([parts(vv)$Vector(F)]$List(LF))$Matrix(F)
+        vvr : Matrix(Z) := reducedSystem(vm)
+        i : N
+        pl2 : List(UPZ) := [unvectorise(row(vvr, i)$Matrix(Z))$UPZ
+                  for i in 1..nrows(vvr)]
+        eq2z := gcd(pl2)
+        ff := factor(eq2z)$MultivariateFactorize(
+                       SingletonAsOrderedSet, N, Z, UPZ)
+        facl := factors(ff)$Factored(UPZ)
+        res : List(Q) := []
+        for facr in facl repeat
+            fac := facr.factor
+            degree(fac) ~= 1 => "iterate"
+            val1r : Q := -coefficient(fac, 0) /$Q leadingCoefficient(fac)
+            res := cons(val1r, res)
+        res
+
+    get_rational_solutions(eq1 : Equation(FRF), s1 : SE, s2 : SE) : List(Q) ==
+        (rv := rhs(eq1)) ~=$FRF 0 =>
+            s1 ~= retract(lhs(eq1))@SE =>
+                error "wrong format of solution 1"
+            ru0 := retractIfCan(rv)@Union(FP, "failed")
+            ru0 case "failed" => []
+            ru1 := retractIfCan(ru0::FP)@Union(F, "failed")
+            ru1 case "failed" => []
+            ru2 := retractIfCan(ru1::F)@Union(Q, "failed")
+            ru2 case "failed" => []
+            [ru2::Q]
+        eq1p := numer(lhs(eq1))$FRF
+        member?(s2, variables(eq1p))$List(SE) =>
+                error "wrong format of solution 2"
+        k1 := kernel(s1)$K
+        eq1f := retract(eval(eq1p, s1, k1::F))@F
+        get_rational_solutions2(eq1f, k1)

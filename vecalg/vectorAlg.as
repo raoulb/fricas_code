@@ -53,6 +53,9 @@ define VectorSpcCategory(R:Join(ArithmeticType, ExpressionType), n:MI == 3): Cat
     (x:%)-(y:%):% == x+(-1)*y;
     (x:%)*(r:R):% == r*x;
     -(x:%):% == (-1)*x;
+
+    if R has Field then
+      (x:%) / (r:R) : % == (inv r) * x;
   }
 }
 
@@ -181,12 +184,6 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
     }
     per simplify0 reverse! l;
   }
-
-  if R has Field then
-    (x:%) / (r:R): % ==
-    {
-      1$R/r * x
-    }
 
   (x:%) + (y:%): % ==
   {

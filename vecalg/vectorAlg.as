@@ -189,6 +189,17 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
     per simplify0 reverse! l;
   }
 
+  if R has Field then
+  {
+    (x:%) / (s:%): % ==
+    {
+      realVector? s => {stdout << "Attempted division by non-scalar quantity!" << newline;
+                        per [[0, [], []]];}
+      -- TODO: For a working implementation we need to extend the normal form.
+      per [[0, [], []]];
+    }
+  }
+
   (x:%) + (y:%): % ==
   {
     per append(rep x, rep y);

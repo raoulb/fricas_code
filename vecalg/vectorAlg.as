@@ -47,9 +47,9 @@ define VectorSpcCategory(R:Join(ArithmeticType, ExpressionType), n:MI == 3): Cat
   default
   {
     import from R;
-    (x:%)-(y:%):% == x+(-1)*y;
-    (x:%)*(r:R):% == r*x;
-    -(x:%):% == (-1)*x;
+    (x:%) - (y:%):% == x+(-1)*y;
+    (x:%) * (r:R):% == r*x;
+    - (x:%):% == (-1)*x;
   }
 }
 
@@ -300,7 +300,7 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
     }
   }
 
-  (port:TEXT)<<(x:%):TEXT ==
+  (port:TEXT) << (x:%):TEXT ==
   {
     xx := rep x;
     empty? xx => port<<0$R;
@@ -643,7 +643,7 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
   import from List Set String;
   import from List Set List String;
 
-  local setsGcd0 (lt:List Set String):Set String ==
+  local setsGcd0(lt:List Set String):Set String ==
   {
     #lt=1 => first lt;
     tp0 := first lt;
@@ -658,7 +658,7 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
     tp0;
   }
 
-  local setsGcd (lt:List Set List String):Set List String ==
+  local setsGcd(lt:List Set List String):Set List String ==
   {
     #lt=1 => first lt;
     tp0 := first lt;
@@ -673,7 +673,7 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
     tp0;
   }
 
-  local extend? (xx:List Term):Boolean ==
+  local extend?(xx:List Term):Boolean ==
   {
     realVector?(per xx) => false;
     tt:Boolean := true;
@@ -693,7 +693,7 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
     tt;
   }
 
-  local cond? (p1:scaTerm, p2:scaTerm, p3:scaTerm):Boolean ==
+  local cond?(p1:scaTerm, p2:scaTerm, p3:scaTerm):Boolean ==
   {
     tt:Boolean := (p1.coe2=p2.coe2 or p1.coe2=(-1)*p2.coe2);
     tt := tt and (p2.coe2=p3.coe2 or p2.coe2=(-1)*p3.coe2);
@@ -727,7 +727,7 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
   }
 
   -- we assume #pi.vec=2
-  local cond11? (p1:Term, p2:Term, p3:Term):Boolean ==
+  local cond11?(p1:Term, p2:Term, p3:Term):Boolean ==
   {
     tt:Boolean := (p1.coe=p2.coe or p1.coe=(-1)*p2.coe);
     tt := tt and (p2.coe=p3.coe or p2.coe=(-1)*p3.coe);
@@ -756,7 +756,7 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
     true;
   }
 
-  local distribute (p:mixTerm):List Term ==
+  local distribute(p:mixTerm):List Term ==
   {
     l:List Term := empty;
     for tx in p.scal repeat

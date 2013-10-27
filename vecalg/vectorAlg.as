@@ -87,12 +87,13 @@ define VectorAlgCategory(R:Join(ArithmeticType, ExpressionType)): Category == Ve
 
 VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAlgCategory R) == add
 {
-  Term == Record(coe:R, sca:List List String, vec:List String);
+  --Term == Record(coe:R, sca:List List String, vec:List String);
+  Term == Record(coe:R, scan:List List String, vec:List String);
   Rep == List Term;
 
-  scaTerm == Record(coe2:R, sca2:List List String);
+  scaTerm == Record(coe2:R, scan2:List List String);
   scaList == List scaTerm;
-  mixTerm == Record(scal:scaList, vec2:List String);
+  mixTerm == Record(scanl:scaList, vec2:List String);
 
   import from MI, R, Term, Rep, TEXT, TREE, String, Boolean;
   import from scaTerm, scaList, mixTerm;
@@ -169,7 +170,7 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
   (r:R) * (x:%): % ==
   {
     xx := rep x;
-    xx := [[r*p.coe, p.sca, p.vec] for p in xx];
+    xx := [[r*p.coe, p.scan, p.vec] for p in xx];
     per simplify0(xx);
   }
 
@@ -182,7 +183,7 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
       assert(empty? ts.vec);
       for tx in xx repeat{
 	-- assert(~empty? tx.vec);
-        m := [ts.coe*tx.coe, append(ts.sca, tx.sca), tx.vec]@Term;
+        m := [ts.coe*tx.coe, append(ts.scan, tx.scan), tx.vec]@Term;
         l := cons(m, l);
       }
     }
@@ -222,25 +223,25 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
         n2:MI := #ty.vec;
         if n1=1 and n2=1 then
         {
-          m := [tx.coe*ty.coe, cons([tx.vec(1), ty.vec(1)], append(tx.sca, ty.sca)), []]@Term;
+          m := [tx.coe*ty.coe, cons([tx.vec(1), ty.vec(1)], append(tx.scan, ty.scan)), []]@Term;
           l := cons(m, l);
         }
         else if n1=1 and n2=2 then
         {
-          m := [tx.coe*ty.coe, cons([tx.vec(1), ty.vec(1), ty.vec(2)], append(tx.sca, ty.sca)), []]@Term;
+          m := [tx.coe*ty.coe, cons([tx.vec(1), ty.vec(1), ty.vec(2)], append(tx.scan, ty.scan)), []]@Term;
           l := cons(m, l);
         }
         else if n1=2 and n2=1 then
         {
-          m := [tx.coe*ty.coe, cons([tx.vec(1), tx.vec(2), ty.vec(1)], append(tx.sca, ty.sca)), []]@Term;
+          m := [tx.coe*ty.coe, cons([tx.vec(1), tx.vec(2), ty.vec(1)], append(tx.scan, ty.scan)), []]@Term;
           l := cons(m, l);
         }
         else if n1=2 and n2=2 then
         {
           tp1:List List String := [[tx.vec(1), ty.vec(1)], [tx.vec(2), ty.vec(2)]];
           tp2:List List String := [[tx.vec(1), ty.vec(2)], [tx.vec(2), ty.vec(1)]];
-          m1 := [tx.coe*ty.coe, append(tp1, append(tx.sca, ty.sca)), []]@Term;
-          m2 := [(-1)*tx.coe*ty.coe, append(tp2, append(tx.sca, ty.sca)), []]@Term;
+          m1 := [tx.coe*ty.coe, append(tp1, append(tx.scan, ty.scan)), []]@Term;
+          m2 := [(-1)*tx.coe*ty.coe, append(tp2, append(tx.scan, ty.scan)), []]@Term;
           l := cons(m2, cons(m1, l));
         }
       }
@@ -265,25 +266,25 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
         n2:MI := #ty.vec;
         if n1=1 and n2=1 then
         {
-          m := [tx.coe*ty.coe, append(tx.sca, ty.sca), append(tx.vec, ty.vec)]@Term;
+          m := [tx.coe*ty.coe, append(tx.scan, ty.scan), append(tx.vec, ty.vec)]@Term;
           l := cons(m, l);
         }
         else if n1=1 and n2=2 then
         {
-          m1 := [tx.coe*ty.coe, cons([tx.vec(1), ty.vec(2)], append(tx.sca, ty.sca)), [ty.vec(1)]]@Term;
-          m2 := [(-1)*tx.coe*ty.coe, cons([tx.vec(1), ty.vec(1)], append(tx.sca, ty.sca)), [ty.vec(2)]]@Term;
+          m1 := [tx.coe*ty.coe, cons([tx.vec(1), ty.vec(2)], append(tx.scan, ty.scan)), [ty.vec(1)]]@Term;
+          m2 := [(-1)*tx.coe*ty.coe, cons([tx.vec(1), ty.vec(1)], append(tx.scan, ty.scan)), [ty.vec(2)]]@Term;
           l := cons(m2, cons(m1, l));
         }
         else if n1=2 and n2=1 then
         {
-          m1 := [tx.coe*ty.coe, cons([tx.vec(1), ty.vec(1)], append(tx.sca, ty.sca)), [tx.vec(2)]]@Term;
-          m2 := [(-1)*tx.coe*ty.coe, cons([tx.vec(2), ty.vec(1)], append(tx.sca, ty.sca)), [tx.vec(1)]]@Term;
+          m1 := [tx.coe*ty.coe, cons([tx.vec(1), ty.vec(1)], append(tx.scan, ty.scan)), [tx.vec(2)]]@Term;
+          m2 := [(-1)*tx.coe*ty.coe, cons([tx.vec(2), ty.vec(1)], append(tx.scan, ty.scan)), [tx.vec(1)]]@Term;
           l := cons(m2, cons(m1, l));
         }
         else if n1=2 and n2=2 then
         {
-          m1 := [tx.coe*ty.coe, cons([tx.vec(1), tx.vec(2), ty.vec(2)], append(tx.sca, ty.sca)), [ty.vec(1)]]@Term;
-          m2 := [(-1)*tx.coe*ty.coe, cons([tx.vec(1), tx.vec(2), ty.vec(1)], append(tx.sca, ty.sca)), [ty.vec(2)]]@Term;
+          m1 := [tx.coe*ty.coe, cons([tx.vec(1), tx.vec(2), ty.vec(2)], append(tx.scan, ty.scan)), [ty.vec(1)]]@Term;
+          m2 := [(-1)*tx.coe*ty.coe, cons([tx.vec(1), tx.vec(2), ty.vec(1)], append(tx.scan, ty.scan)), [ty.vec(2)]]@Term;
           l := cons(m2, cons(m1, l));
         }
       }
@@ -296,7 +297,7 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
     szero? t => port<<0$R;
     vzero? t => port<<"O";
     if t.coe~=1 then port<<t.coe;
-    tp := t.sca;
+    tp := t.scan;
     while ~empty? tp repeat
     {
       t1 := first tp;
@@ -315,7 +316,7 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
     }
     if ~empty? t.vec then
     {
-      if (t.coe~=1 or ~empty? t.sca) then port<<"*";
+      if (t.coe~=1 or ~empty? t.scan) then port<<"*";
       #t.vec=1 => port<<first t.vec;
       port<<"("<<t.vec(1)<<"^"<<t.vec(2)<<")";
     }
@@ -333,7 +334,7 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
       if tp.coe<0 then
       {
         port<<"-";
-        writeTerm(port, [(-1)*tp.coe, tp.sca, tp.vec]@Term);
+        writeTerm(port, [(-1)*tp.coe, tp.scan, tp.vec]@Term);
       }
       else
       { writeTerm(port, tp);}
@@ -345,7 +346,7 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
         if tx.coe<0 then
         {
           port<<"-";
-          writeTerm(port, [(-1)*tx.coe, tx.sca, tx.vec]@Term);
+          writeTerm(port, [(-1)*tx.coe, tx.scan, tx.vec]@Term);
         }
         else
         {
@@ -518,14 +519,14 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
     szero? t2 or vzero? t2 => false;
     listOrder?(t1.vec, t2.vec) and ~listEq?(t1.vec, t2.vec) => true;
     ~listOrder?(t1.vec, t2.vec) => false;
-    dblListOrder?(t1.sca, t2.sca) and ~dblListEq?(t1.sca, t2.sca) =>true;
-    ~dblListOrder?(t1.sca, t2.sca) => false;
+    dblListOrder?(t1.scan, t2.scan) and ~dblListEq?(t1.scan, t2.scan) =>true;
+    ~dblListOrder?(t1.scan, t2.scan) => false;
     true;
   }
 
   local termEq?(t1:Term, t2:Term): Boolean ==
   {
-    t1.coe=t2.coe and dblListEq?(t1.sca, t2.sca) and listEq?(t1.vec, t2.vec);
+    t1.coe=t2.coe and dblListEq?(t1.scan, t2.scan) and listEq?(t1.vec, t2.vec);
   }
 
   -- local permute4():List List MI ==
@@ -557,23 +558,23 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
 
     for tx in xx repeat
     {
-      tpx:Term := [tx.coe, copy tx.sca, copy tx.vec];
+      tpx:Term := [tx.coe, copy tx.scan, copy tx.vec];
       #tpx.vec=2 and tpx.vec(1)=tx.vec(2) => lo := lo;
       if #tpx.vec=2 and tpx.vec(1)>tpx.vec(2) then
       {
         tpx.vec := [tpx.vec(2), tpx.vec(1)];
         tpx.coe := (-1)*tpx.coe;
       }
-      empty? tpx.sca => lo := cons(tpx, lo);
+      empty? tpx.scan => lo := cons(tpx, lo);
       li:List List String := empty;
-      for ts in tpx.sca repeat
+      for ts in tpx.scan repeat
       {
         n := #ts;
         n=1 => {li := cons(ts, li); }
         n=2 => {if ts(1)>ts(2) then { li := cons([ts(2), ts(1)], li); } else {li := cons(ts, li);} }
         n=3 =>
         {
-          if ts(1)=ts(2) or ts(2)=ts(3) or ts(3)=ts(1) then {tpx.coe := 0; li := tpx.sca; break; }
+          if ts(1)=ts(2) or ts(2)=ts(3) or ts(3)=ts(1) then {tpx.coe := 0; li := tpx.scan; break; }
           else
           {
             tp:List String := empty;
@@ -591,7 +592,7 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
           }
         }
       }
-      tpx.sca := sort!(li, listOrder?);
+      tpx.scan := sort!(li, listOrder?);
       lo := cons(tpx, lo);
     }
     lo := reverse lo;
@@ -603,8 +604,8 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
     for tx in yy repeat
     {
       t1 := first lo;
-      listEq?(tx.vec, t1.vec) and dblListEq?(tx.sca, t1.sca) =>
-        lo := cons([tx.coe+t1.coe, t1.sca, t1.vec], rest lo);
+      listEq?(tx.vec, t1.vec) and dblListEq?(tx.scan, t1.scan) =>
+        lo := cons([tx.coe+t1.coe, t1.scan, t1.vec], rest lo);
       lo := cons(tx, lo);
     }
     lo := reverse simplify0 lo;
@@ -702,7 +703,7 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
     n3:MI := 0;
     for tx in xx repeat
     {
-      tp := tx.sca;
+      tp := tx.scan;
       n := #tp;
       n<3 => {tt := false; break;}
       if #tp(n)=2
@@ -720,9 +721,9 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
     tt := tt and (p2.coe2=p3.coe2 or p2.coe2=(-1)*p3.coe2);
     tt := tt and (p3.coe2=p1.coe2 or p3.coe2=(-1)*p1.coe2);
     ~tt => false;
-    l1 := p1.sca2 pretend Set List String;
-    l2 := p2.sca2 pretend Set List String;
-    l3 := p3.sca2 pretend Set List String;
+    l1 := p1.scan2 pretend Set List String;
+    l2 := p2.scan2 pretend Set List String;
+    l3 := p3.scan2 pretend Set List String;
     sg := setsGcd([l1, l2, l3]);
     s1 := (l1-sg) pretend List List String;
     s2 := (l2-sg) pretend List List String;
@@ -754,9 +755,9 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
     tt := tt and (p2.coe=p3.coe or p2.coe=(-1)*p3.coe);
     tt := tt and (p3.coe=p1.coe or p3.coe=(-1)*p1.coe);
     ~tt => false;
-    l1 := p1.sca pretend Set List String;
-    l2 := p2.sca pretend Set List String;
-    l3 := p3.sca pretend Set List String;
+    l1 := p1.scan pretend Set List String;
+    l2 := p2.scan pretend Set List String;
+    l3 := p3.scan pretend Set List String;
     sg := setsGcd([l1, l2, l3]);
     s1 := (l1-sg) pretend List List String;
     s2 := (l2-sg) pretend List List String;
@@ -780,9 +781,9 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
   local distribute (p:mixTerm):List Term ==
   {
     l:List Term := empty;
-    for tx in p.scal repeat
+    for tx in p.scanl repeat
     {
-      l := cons([tx.coe2, tx.sca2, p.vec2], l);
+      l := cons([tx.coe2, tx.scan2, p.vec2], l);
     }
     l;
   }
@@ -797,9 +798,9 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
 
   local comb(p:mixTerm):List Term ==
   {
-    l1 := (p.scal(1)).sca2 pretend Set List String;
-    l2 := (p.scal(2)).sca2 pretend Set List String;
-    l3 := (p.scal(3)).sca2 pretend Set List String;
+    l1 := (p.scanl(1)).scan2 pretend Set List String;
+    l2 := (p.scanl(2)).scan2 pretend Set List String;
+    l3 := (p.scanl(3)).scan2 pretend Set List String;
     sg := setsGcd([l1, l2, l3]);
     s1 := (l1-sg) pretend List List String;
     s2 := (l2-sg) pretend List List String;
@@ -825,7 +826,7 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
     b := (ut2-it2)(2);
     c := (ut2-it2)(3);
     lg := sg pretend List List String;
-    coe:R := (p.scal(1)).coe2;
+    coe:R := (p.scanl(1)).coe2;
 
     tp1 := [coe, append([[d, a], [h, b, c]], lg), p.vec2]@Term;
     tp2 := [coe, append([[d, b], [a, h, c]], lg), p.vec2]@Term;
@@ -857,9 +858,9 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
   -- we assume #pi.vec=2
   local comb11(p1:Term, p2:Term, p3:Term):List Term ==
   {
-    l1 := p1.sca pretend Set List String;
-    l2 := p2.sca pretend Set List String;
-    l3 := p3.sca pretend Set List String;
+    l1 := p1.scan pretend Set List String;
+    l2 := p2.scan pretend Set List String;
+    l3 := p3.scan pretend Set List String;
     sg := setsGcd([l1, l2, l3]);
     s1 := (l1-sg) pretend List List String;
     s2 := (l2-sg) pretend List List String;
@@ -902,25 +903,25 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
     l:List Term := empty;
     for tx in xx repeat
     {
-      if #tx.vec ~= 1 or empty? tx.sca then l := cons(tx, l);
+      if #tx.vec ~= 1 or empty? tx.scan then l := cons(tx, l);
       else
       {
-        n := #tx.sca;
+        n := #tx.scan;
         lt:List String := empty;
         rt:List List String := empty;
         if flag then
         {
-          lt := first reverse tx.sca;
-          rt := rest reverse tx.sca;
+          lt := first reverse tx.scan;
+          rt := rest reverse tx.scan;
         }
         else
         {
           for i in 1..n repeat
           {
-            #tx.sca(i)=3 =>
+            #tx.scan(i)=3 =>
             {
-              lt := tx.sca(i);
-              rt := append([tx.sca(j) for j in 1..(i-1)], [tx.sca(j) for j in (i+1)..n]);
+              lt := tx.scan(i);
+              rt := append([tx.scan(j) for j in 1..(i-1)], [tx.scan(j) for j in (i+1)..n]);
               break;
             }
           }
@@ -949,25 +950,25 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
     l:List Term := empty;
     for tx in xx repeat
     {
-      if #tx.vec ~= 2 or empty? tx.sca then l := cons(tx, l);
+      if #tx.vec ~= 2 or empty? tx.scan then l := cons(tx, l);
       else
       {
-        n := #tx.sca;
+        n := #tx.scan;
         lt:List String := empty;
         rt:List List String := empty;
         if flag then
         {
-          lt := first reverse tx.sca;
-          rt := rest reverse tx.sca;
+          lt := first reverse tx.scan;
+          rt := rest reverse tx.scan;
         }
         else
         {
           for i in 1..n repeat
           {
-            #tx.sca(i)=3 =>
+            #tx.scan(i)=3 =>
             {
-              lt := tx.sca(i);
-              rt := append([tx.sca(j) for j in 1..(i-1)], [tx.sca(j) for j in (i+1)..n]);
+              lt := tx.scan(i);
+              rt := append([tx.scan(j) for j in 1..(i-1)], [tx.scan(j) for j in (i+1)..n]);
               break;
             }
           }
@@ -998,24 +999,24 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
     xx := sort!(xx, termOrder?);
     tp00 := first xx;
     zz := rest xx;
-    lo := [ [[[tp00.coe, tp00.sca]], tp00.vec] ]@List mixTerm;
+    lo := [ [[[tp00.coe, tp00.scan]], tp00.vec] ]@List mixTerm;
     for tx in zz repeat
     {
       tp01 := first lo;
       listEq? (tp01.vec2, tx.vec) =>
-        lo := cons([cons([tx.coe, tx.sca], tp01.scal), tp01.vec2], rest lo);
-      lo := cons([[[tx.coe, tx.sca]], tx.vec], lo);
+        lo := cons([cons([tx.coe, tx.scan], tp01.scanl), tp01.vec2], rest lo);
+      lo := cons([[[tx.coe, tx.scan]], tx.vec], lo);
     }
     l:List Term := empty;
     for tx in lo repeat
     {
-      L:scaList := tx.scal;
+      L:scaList := tx.scanl;
       n := #L;
       n<3 => l := append(l, distribute tx);
       ttp2:scaList := empty;
       for i in 1..n repeat
       {
-        empty? L(i).sca2 or #(first (reverse L(i).sca2))<3 =>
+        empty? L(i).scan2 or #(first (reverse L(i).scan2))<3 =>
           l := append(l, distribute [[L(i)], tx.vec2]);
         ttp2 := cons(L(i), ttp2);
       }
@@ -1068,7 +1069,7 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
     l:List Term := empty;
     for tx in xx repeat
     {
-      tp0 := tx.sca;
+      tp0 := tx.scan;
       n := #tp0;
       if n<2 then l := cons(tx, l);
       else
@@ -1175,7 +1176,7 @@ VectorAlg(R:Join(ArithmeticType, ExpressionType)): Join(ExpressionType, VectorAl
     l:List Term := empty;
     for tx in xx repeat
     {
-      tp0 := tx.sca;
+      tp0 := tx.scan;
       n := #tp0;
       if n<2 then l := cons(tx, l);
       else

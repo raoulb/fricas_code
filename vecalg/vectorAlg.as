@@ -75,6 +75,10 @@ define VectorAlgCategory(R:Join(ArithmeticType, ExpressionType)): Category == Ve
   ^:     (%, %) -> %;
   <<:    (TextWriter, %) -> TextWriter;
 
+  if R has Field then
+    -- This will fail of course if y is not a scalar quantity
+    /: (x:%, y:%) -> %;
+
   default
   {
     s3p(x:%, y:%, z:%):% == apply(x^y, z);

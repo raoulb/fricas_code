@@ -1,0 +1,26 @@
+First compile the libraries with:
+
+  )co CSP.spad   -- counting sort package
+  )co ST.spad    -- some set tools
+  )co VA.spad    -- vector algebra code
+
+Then run the tests and examples with:
+
+  )read tests.input
+  )read examples.input
+
+Interactive usage:
+
+  V ==> VectorAlgebra(Fraction Integer)
+
+  a := vector("a")$V
+  x := vector("x")$V
+
+  expr := (a^x + x^(a^x)) * x
+
+  isScalar? expr
+
+  zero? expr
+  zero? simplify(expr)
+
+  simplify(expr)

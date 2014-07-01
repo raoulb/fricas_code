@@ -1,0 +1,158 @@
+)abbrev package CNTSPAK CountingSortPackage
+++ Description:
+++ This package exports sorting algorithnms
+CountingSortPackage(S, A) : Exports == Implementation where
+  S : Type
+  A : Join(IndexedAggregate(Integer, S), finiteAggregate, shallowlyMutable)
+
+  NNI ==> NonNegativeInteger
+
+  Exports == with
+
+    countingBubbleSort : (A, (S, S) -> Boolean) -> Record(sorted:A, exchanges:NNI)
+        ++ Counting version of bubble sort
+
+    countingBubbleSort! : (A, (S, S) -> Boolean) -> Record(sorted:A, exchanges:NNI)
+        ++ Counting version of bubble sort
+
+    countingInsertionSort! : (A, (S, S) -> Boolean) -> Record(sorted:A, exchanges:NNI)
+        ++ Counting version of insertion sort
+
+    if A has UnaryRecursiveAggregate(S) then
+      countingMergeSort : (A, (S, S) -> Boolean) -> Record(sorted:A, exchanges:NNI)
+        ++ Counting version of merge sort
+
+    if S has OrderedSet then
+      countingBubbleSort : A -> Record(sorted:A, exchanges:NNI)
+        ++ Counting version of bubble sort
+
+      countingBubbleSort! : A -> Record(sorted:A, exchanges:NNI)
+        ++ Counting version of bubble sort
+
+      countingInsertionSort! : A -> Record(sorted:A, exchanges:NNI)
+        ++ Counting version of insertion sort
+
+      if A has UnaryRecursiveAggregate(S) then
+        countingMergeSort : A -> Record(sorted:A, exchanges:NNI)
+          ++ Counting version of merge sort
+
+  Implementation == add
+
+    countingBubbleSort!(m, f) ==
+      nrexchanges : NNI := 0
+      n := #m
+      for i in 1..(n-1) repeat
+        for j in n..(i+1) by -1 repeat
+          if f(m.j, m.(j-1)) then
+            swap!(m, j, j-1)
+            nrexchanges := nrexchanges + 1
+      [m, nrexchanges]
+
+    countingBubbleSort(m, f) ==
+      countingBubbleSort!(copy m, f)
+
+    countingInsertionSort!(m, f) ==
+      nrexchanges : NNI := 0
+      for i in 2..#m repeat
+        j := i
+        while j > 1 and f(m.j, m.(j-1)) repeat
+          swap!(m, j, j-1)
+          nrexchanges := nrexchanges + 1
+          j := qcoerce(j - 1)@PositiveInteger
+      [m, nrexchanges]
+
+
+    if S has OrderedSet then
+      countingBubbleSort(m) == countingBubbleSort(m, _<$S)
+      countingBubbleSort!(m) == countingBubbleSort!(m, _<$S)
+      countingInsertionSort!(m) == countingInsertionSort!(m, _<$S)
+
+
+    if A has UnaryRecursiveAggregate(S) then
+      -- Put the code here as we need first, rest functions which
+      -- are not available for the general A defined above
+
+      countingMergeSort(m, f) ==
+        n : NNI := #m
+        n <= 1 => [m, 0]
+
+        -- Split and descend
+        nhalf : NNI := shift(n, -1)
+        ra := countingMergeSort(first(m,nhalf), f)
+        rb := countingMergeSort(rest(m,nhalf), f)
+        sla := ra.sorted
+        slb := rb.sorted
+        nrexchanges := ra.exchanges + rb.exchanges
+
+        -- Merge
+        result := copy m
+        na : NNI := #sla
+        nb : NNI := #slb
+        ia : NNI := 1
+        ib : NNI := 1
+
+        for j in 1..n repeat
+          if ia <= na and ib <= nb then
+            if f(sla(ia), slb(ib)) then
+              -- We have to take the element from the first list
+              result(j) := sla(ia)
+              diff : NNI := 0
+              ia := ia + 1
+            else if f(slb(ib), sla(ia)) then
+              -- We can take the element from the second list
+              result(j) := slb(ib)
+              diff : NNI := (na - ia + 1)::NNI
+              ib := ib + 1
+            else
+              -- Heads of both lists compare equal, take from the
+              -- first list to avoid unnecessary transpositions
+              result(j) := sla(ia)
+              diff : NNI := 0
+              ia := ia + 1
+            nrexchanges := nrexchanges + diff
+
+          -- Only one list still has elements
+          else if ia <= na then
+            result(j) := sla(ia)
+            ia := ia + 1
+
+          else if ib <= nb then
+            result(j) := slb(ib)
+            ib := ib + 1
+
+        [result, nrexchanges]
+
+
+      if S has OrderedSet then
+        countingMergeSort(m) == countingMergeSort(m, _<$S)
+
+--Copyright (c) 1991-2002, The Numerical ALgorithms Group Ltd.
+--All rights reserved.
+--
+--Redistribution and use in source and binary forms, with or without
+--modification, are permitted provided that the following conditions are
+--met:
+--
+--    - Redistributions of source code must retain the above copyright
+--      notice, this list of conditions and the following disclaimer.
+--
+--    - Redistributions in binary form must reproduce the above copyright
+--      notice, this list of conditions and the following disclaimer in
+--      the documentation and/or other materials provided with the
+--      distribution.
+--
+--    - Neither the name of The Numerical ALgorithms Group Ltd. nor the
+--      names of its contributors may be used to endorse or promote products
+--      derived from this software without specific prior written permission.
+--
+--THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+--IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+--TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+--PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+--OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+--EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+--PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+--PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+--LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+--NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+--SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.

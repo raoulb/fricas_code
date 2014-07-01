@@ -382,7 +382,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
           else if #sp = 3 then
             -- A scalar triple product
             -- Axiom 2.3 applies: [abc] = [bca] = [cab] = -[acb] = -[cba] = -[bac]
-            r := countingBubbleSort(sp)$SortPackage(String, List(String))
+            r := countingBubbleSort(sp)$CountingSortPackage(String, List(String))
             nsp := cons(r.sorted, nsp)
             if odd? r.exchanges then nt.coe := -nt.coe
 
@@ -400,7 +400,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
         else if #vp = 2 then
           -- A vector product
           -- Axiom 2.2 applies: a^b = -b^a
-          r := countingBubbleSort(vp)$SortPackage(String, List(String))
+          r := countingBubbleSort(vp)$CountingSortPackage(String, List(String))
           nvp := r.sorted
           if odd? r.exchanges then nt.coe := -nt.coe
 

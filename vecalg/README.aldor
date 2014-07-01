@@ -5,3 +5,16 @@ First compile the library with:
 Then run the example code with:
 
   aldor -G interp vectorAlg_examples.as
+
+Interactive usage:
+
+%1 >> #include "algebra"
+%2 >> #include "aldorinterp"
+
+%3 >> #library VA "vectorAlg.ao"
+
+%4 >> macro Z == AldorInteger
+
+%5 >> import from VA, Z, String, Symbol, VectorAlg Z
+
+%6 >> a := vector(-"a")

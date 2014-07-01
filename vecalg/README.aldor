@@ -1,6 +1,6 @@
 First compile the library with:
 
-  aldor vectorAlg.as 
+  aldor vectorAlg.as
 
 Then run the example code with:
 
@@ -8,13 +8,13 @@ Then run the example code with:
 
 Interactive usage:
 
-%1 >> #include "algebra"
-%2 >> #include "aldorinterp"
+  %1 >> #include "algebra"
+  %2 >> #include "aldorinterp"
 
-%3 >> #library VA "vectorAlg.ao"
+  %3 >> #library VA "vectorAlg.ao"
 
-%4 >> macro Z == AldorInteger
+  %4 >> macro Z == AldorInteger
 
-%5 >> import from VA, Z, String, Symbol, VectorAlg Z
+  %5 >> import from VA, Z, String, Symbol, VectorAlg Z
 
-%6 >> a := vector(-"a")
+  %6 >> a := vector(-"a")

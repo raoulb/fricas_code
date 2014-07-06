@@ -21,6 +21,28 @@ import from MQ
 import from LAQ
 
 
+pm(M:DenseMatrix(Q)): () ==
+    -- Pretty print dense matrices
+    -- How make 'Q' just an arbitrary Ring?
+    import from Character, String, TextWriter
+
+    (nr, nc) := dimensions M
+
+    for r in 1..nr repeat
+        if r = 1 or r = nr then
+            stdout << "+  ";
+        else
+            stdout << "|  ";
+        for c in 1..nc repeat
+            stdout << M(r,c);
+            if c ~= nc then
+                stdout << "   ";
+        if r = 1 or r = nr then
+            stdout << "  +" << newline;
+        else
+            stdout << "  |" << newline;
+
+
 main(): () ==
     import from Character, String
     import from TextWriter
@@ -65,6 +87,12 @@ main(): () ==
 
     stdout << "Is A x - b = 0? " << zero? (A*x-b) << newline
 
+    stdout << "A:" << newline
+    pm(A)
+    stdout << "b:" << newline
+    pm(b)
+    stdout << "x:" << newline
+    pm(x)
 
 
 

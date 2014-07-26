@@ -53,6 +53,9 @@ VectorSpaceCategory(R : Field) : Category == CoercibleTo(OutputForm) with
 VectorAlgebraCategory(R : Field) : Category == VectorSpaceCategory(R) with
     -- or Algebra(R) ?
 
+    scalar: Symbol -> %
+      ++ Create a symbolic component-free vector object
+
     vector: Symbol -> %
       ++ Create a symbolic component-free vector object
 
@@ -72,6 +75,9 @@ VectorAlgebraCategory(R : Field) : Category == VectorSpaceCategory(R) with
 
     coerce: R -> %
       ++ Make scalar vector algebra expressions out of base field elements
+
+    coerce: Symbol -> %
+      ++ Make scalar vector algebra expressions out of symbolic base field elements
 
     "*": (%, %) -> %
       ++ Dot/scalar product
@@ -177,14 +183,23 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
     -- Construct new domain elements
 
     scalarZero() : % == per [ [0, [], []] ]
+      -- TODO: Try for scalar zero:
+      --       [ [0, [[]], []] ]
+      --       which would differ from vector zero:
+      --       [ [0, [], []] ]
 
     vectorZero() : % == per [ [0, [], ["0"]] ]
-      -- TODO: Fix "0" string here
+      -- TODO: Fix string "0" here because:
+      --       vector("0")
+      --       is the zero vector which is problematic.
 
-    vector(x:Symbol) : % == per [ [1::R, [], [string x]] ]
+    coerce(r:R) : % == per [ [r::R, [], []] ]
 
-    coerce(r:R) : % ==
-      per [ [r::R, [], []] ]
+    coerce(s:Symbol) : % == scalar(s)
+
+    scalar(s:Symbol) : % == per [ [1::R, [[string s]], []] ]
+
+    vector(v:Symbol) : % == per [ [1::R, [], [string v]] ]
 
 
     -- Check a term for being zero

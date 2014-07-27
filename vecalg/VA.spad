@@ -2,7 +2,7 @@
 )abbrev category VSC VectorSpaceCategory
 ++ Author: Raoul Bourquin
 ++ Date Created: 7 October 2012
-++ Date Last Updated: 12 October 2012
+++ Date Last Updated: 27 July 2014
 ++ Description:
 ++ Implementation of component-free vector algebra
 ++ based on the techniques described in the paper
@@ -37,7 +37,7 @@ VectorSpaceCategory(R : Field) : Category == CoercibleTo(OutputForm) with
 )abbrev category VAC VectorAlgebraCategory
 ++ Author: Raoul Bourquin
 ++ Date Created: 7 October 2012
-++ Date Last Updated: 12 October 2012
+++ Date Last Updated: 27 July 2014
 ++ Description:
 ++ Implementation of component-free vector algebra
 ++ based on the techniques described in the paper
@@ -115,7 +115,7 @@ VectorAlgebraCategory(R : Field) : Category == VectorSpaceCategory(R) with
 )abbrev domain VA VectorAlgebra
 ++ Author: Raoul Bourquin
 ++ Date Created: 7 October 2012
-++ Date Last Updated: 12 October 2012
+++ Date Last Updated: 27 July 2014
 ++ Description:
 ++ Implementation of component-free vector algebra
 ++ based on the techniques described in the paper
@@ -891,7 +891,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       l1 := set(p1.sca)
       l2 := set(p2.sca)
       l3 := set(p3.sca)
-      sg := setsGcd([l1, l2, l3])$SetTools(List String)
+      sg := intersect([l1, l2, l3])$SetTools(List String)
       s1 := coerce(difference(l1, sg))$SetTools(List String)
       s2 := coerce(difference(l2, sg))$SetTools(List String)
       s3 := coerce(difference(l3, sg))$SetTools(List String)
@@ -909,10 +909,10 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       t32 := set(p3.vec)
       ut1 := union([t11, t21, t31])$SetTools(String)
       ut2 := union([t12, t22, t32])$SetTools(String)
-      it1 := setsGcd([t11, t21, t31])$SetTools(String)
-      it2 := setsGcd([t12, t22, t32])$SetTools(String)
+      it1 := intersect([t11, t21, t31])$SetTools(String)
+      it2 := intersect([t12, t22, t32])$SetTools(String)
 
-      not (#it1=1 and #it2=0 and #ut2=3 and #setsGcd([ut1, ut2])=3) => false
+      not (#it1=1 and #it2=0 and #ut2=3 and #intersect([ut1, ut2])=3) => false
 
       -- Ok, all terms compatible
       true
@@ -923,7 +923,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       l2 := set(p2.sca)
       l3 := set(p3.sca)
 
-      sg := setsGcd([l1, l2, l3])$SetTools(List String)
+      sg := intersect([l1, l2, l3])$SetTools(List String)
       lg := coerce(sg)$SetTools(List String)
 
       s1 := coerce(difference(l1, sg))$SetTools(List String)
@@ -938,7 +938,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       t32 := set(p3.vec)
 
       ut2 := coerce(union([t12, t22, t32])$SetTools(String))$SetTools(String)
-      it1 := coerce(setsGcd([t11, t21, t31])$SetTools(String))$SetTools(String)
+      it1 := coerce(intersect([t11, t21, t31])$SetTools(String))$SetTools(String)
 
       d := it1(1)
       a := ut2(1)
@@ -1031,7 +1031,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       l1 := set(t1.sca2)
       l2 := set(t2.sca2)
       l3 := set(t3.sca2)
-      li := setsGcd([l1,l2,l3])$SetTools(List String)
+      li := intersect([l1,l2,l3])$SetTools(List String)
       s1 := difference(l1, li)
       s2 := difference(l2, li)
       s3 := difference(l3, li)
@@ -1060,8 +1060,8 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
 
       uspp := union(pp1)$SetTools(String)
       utpp := union(pp2)$SetTools(String)
-      ispp := setsGcd(pp1)$SetTools(String)
-      itpp := setsGcd(pp2)$SetTools(String)
+      ispp := intersect(pp1)$SetTools(String)
+      itpp := intersect(pp2)$SetTools(String)
 
       -- Check if there are exactely 4 distinct variables contribution to
       -- all products and only a single one is involved in all products
@@ -1154,7 +1154,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       l1 := set(t1.sca2)
       l2 := set(t2.sca2)
       l3 := set(t3.sca2)
-      li := setsGcd([l1,l2,l3])$SetTools(List String)
+      li := intersect([l1,l2,l3])$SetTools(List String)
       s1 := difference(l1, li)
       s2 := difference(l2, li)
       s3 := difference(l3, li)
@@ -1177,8 +1177,8 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
 
       uspp := union(pp1)$SetTools(String)
       utpp := union(pp2)$SetTools(String)
-      ispp := setsGcd(pp1)$SetTools(String)
-      itpp := setsGcd(pp2)$SetTools(String)
+      ispp := intersect(pp1)$SetTools(String)
+      itpp := intersect(pp2)$SetTools(String)
 
       -- Extract the parts
       abc := coerce(difference(utpp, ispp))$SetTools(String)

@@ -1,0 +1,69 @@
+-- )read test_rules.input
+
+Z ==> Integer
+Q ==> Fraction Z
+VA ==> VectorAlgebra(Q)
+
+import from VA
+
+a := vector("a")$VA
+b := vector("b")$VA
+c := vector("c")$VA
+d := vector("d")$VA
+e := vector("e")$VA
+
+
+-- Rule 28
+-- (a,b,c) * d = (d*a)*(b^c) + (d*b)*(c^a) + (d*c)*(a^b)
+lhs28 := s3p(a,b,c) * d
+rhs28 := (d*a)*(b^c) + (d*b)*(c^a) + (d*c)*(a^b)
+
+rhs28a := applyRule(lhs28, "rule28")
+simplify(rhs28 - rhs28a)
+
+lhs28a := applyRule(rhs28, "rule28inv")
+simplify(lhs28 - lhs28a)
+
+simplify(rhs28 - lhs28)
+
+
+-- Rule 29
+-- (abc) * (d^e) = (b^c)*(d^e) * a + (c^a)*(d^e) * b + (a^b)*(d^e) * c
+lhs29 := (abc) * (d^e)
+rhs29 := (b^c)*(d^e)*a + (c^a)*(d^e)*b + (a^b)*(d^e)*c
+
+rhs29a := applyRule(lhs29, "rule29")
+simplify(rhs29 - rhs29a)
+
+--lhs29a := applyRule(rhs29, "rule29inv")
+--simplify(lhs29 - lhs29a)
+
+simplify(rhs29 - lhs29)
+
+
+-- Rule 210
+-- (d*e)*(abc) = (d*a)*(ebc) + (d*b)*(aec) + (d*c)*(abe)
+lhs210 := (d*e)*s3p(a,b,c)
+rhs210 := (d*a)*s3p(e,b,c) + (d*b)*s3p(a,e,c) + (d*c)*s3p(a,b,e)
+
+rhs210a := applyRule(lhs210, "rule210")
+simplify(rhs210 - rhs210a)
+
+lhs210a := applyRule(rhs210, "rule210inv")
+simplify(lhs210 - lhs210a)
+
+simplify(rhs210 - lhs210)
+
+
+-- Rule 211
+-- (abc)*(dge) = (b^c)*(d^g)*(a*e) + (c^a)*(d^g)*(b*e) + (a^b)*(d^g)*(c*e)
+lhs211 := s3p(a,b,c)*s3p(d,g,e)
+rhs211 := (b^c)*(d^g)*(a*e) + (c^a)*(d^g)*(b*e) + (a^b)*(d^g)*(c*e)
+
+rhs211a := applyRule(lhs211, "rule211")
+simplify(rhs211 - rhs211a)
+
+--lhs211a := applyRule(rhs211, "rule211inv")
+--simplify(lhs211 - lhs211a)
+
+simplify(rhs211 - lhs211)

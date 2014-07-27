@@ -1,6 +1,7 @@
 -- aldor -ginterp -laldor -lalgebra linsolve.as
 #include "aldor"
 #include "algebra"
+#include "aldorinterp"
 #pile
 
 I ==> MachineInteger
@@ -15,12 +16,14 @@ MQ ==> DenseMatrix Q
 
 LAQ ==> LinearAlgebra(Q, MQ)
 
+AZ ==> Array I
 
 import from I
 import from Z, Q
 import from VZ, VQ
 import from MZ, MQ
 import from LAQ
+import from AZ
 
 
 pm(M:DenseMatrix(Q)): () ==
@@ -117,8 +120,9 @@ main(): () ==
     stdout << "x:" << newline
     pm(x)
 
+    sa:AZ := span A
 
-
+    stdout << "Span columns: " << sa.0 << ", " << sa.1 << ", " << sa.2 << newline
 
 
 main()

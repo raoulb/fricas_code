@@ -143,6 +143,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
 
     import Set(List String)
     import Set(String)
+    import ToolsForSign(R)
 
     INT ==> Integer
     NNI ==> NonNegativeInteger
@@ -647,6 +648,18 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       reverse! result
 
 
+    same?(ex1:List Term, ex2:List Term) : Boolean ==
+      nex1 := normalForm(ex1)
+      nex2 := normalForm(ex2)
+
+      (#nex1 ~= #nex2) => false
+
+      for t1 in nex1 for t2 in nex2 repeat
+        not termEq?(t1, t2) => false
+
+      true
+
+
     -- Transformation rules based on the axioms
     -- Expansion type rules
 
@@ -868,7 +881,82 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
 
     -- Combination type rules
 
-------------------------------------------------------------------------------------------------
+    match28inv?(p1:Term, p2:Term, p3:Term) : Boolean ==
+      -- Check if coefficients match
+      not  ((p1.coe=p2.coe or p1.coe=(-1)*p2.coe)
+        and (p2.coe=p3.coe or p2.coe=(-1)*p3.coe)
+        and (p3.coe=p1.coe or p3.coe=(-1)*p1.coe)) => false
+
+      -- Remove all common scalar subexpressions
+      l1 := set(p1.sca)
+      l2 := set(p2.sca)
+      l3 := set(p3.sca)
+      sg := setsGcd([l1, l2, l3])$SetTools(List String)
+      s1 := coerce(difference(l1, sg))$SetTools(List String)
+      s2 := coerce(difference(l2, sg))$SetTools(List String)
+      s3 := coerce(difference(l3, sg))$SetTools(List String)
+
+      not  (#s1=1 and #s2=1 and #s3=1
+        and #s1(1)=#s2(1) and #s2(1)=#s3(1)
+        and #s1(1)=2 and #s2(1)=2 and #s3(1)=2) => false
+
+      -- Check scalar and vector parts for match
+      t11 := set(s1(1))
+      t21 := set(s2(1))
+      t31 := set(s3(1))
+      t12 := set(p1.vec)
+      t22 := set(p2.vec)
+      t32 := set(p3.vec)
+      ut1 := union([t11, t21, t31])$SetTools(String)
+      ut2 := union([t12, t22, t32])$SetTools(String)
+      it1 := setsGcd([t11, t21, t31])$SetTools(String)
+      it2 := setsGcd([t12, t22, t32])$SetTools(String)
+
+      not (#it1=1 and #it2=0 and #ut2=3 and #setsGcd([ut1, ut2])=3) => false
+
+      -- Ok, all terms compatible
+      true
+
+
+    combine28inv(p1:Term, p2:Term, p3:Term) : List Term ==
+      l1 := set(p1.sca)
+      l2 := set(p2.sca)
+      l3 := set(p3.sca)
+
+      sg := setsGcd([l1, l2, l3])$SetTools(List String)
+      lg := coerce(sg)$SetTools(List String)
+
+      s1 := coerce(difference(l1, sg))$SetTools(List String)
+      s2 := coerce(difference(l2, sg))$SetTools(List String)
+      s3 := coerce(difference(l3, sg))$SetTools(List String)
+
+      t11 := set(s1(1))
+      t21 := set(s2(1))
+      t31 := set(s3(1))
+      t12 := set(p1.vec)
+      t22 := set(p2.vec)
+      t32 := set(p3.vec)
+
+      ut2 := coerce(union([t12, t22, t32])$SetTools(String))$SetTools(String)
+      it1 := coerce(setsGcd([t11, t21, t31])$SetTools(String))$SetTools(String)
+
+      d := it1(1)
+      a := ut2(1)
+      b := ut2(2)
+      c := ut2(3)
+
+      tp1 : Term := [p1.coe, cons([d, a], lg), [b, c]]
+      tp2 : Term := [p1.coe, cons([d, b], lg), [c, a]]
+      tp3 : Term := [p1.coe, cons([d, c], lg), [a, b]]
+      same?([tp1, tp2, tp3], [p1, p2, p3]) => [[p1.coe, cons([a, b, c], lg), [d]]]
+
+      tp1 : Term := [p1.coe, cons([d, a], lg), [c, b]]
+      tp2 : Term := [p1.coe, cons([d, b], lg), [a, c]]
+      tp3 : Term := [p1.coe, cons([d, c], lg), [b, a]]
+      same?([tp1, tp2, tp3], [p1, p2, p3]) => [[p1.coe, cons([a, c, b], lg), [d]]]
+
+      [p1, p2, p3]
+
 
     rule28inv(x:Rep) : Rep ==
       ++ This rule implements the contraction according to the axiom
@@ -885,14 +973,14 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       result : Rep := empty()
 
       -- Search for candidates, they must have a single vector term
-      candidates:Rep := empty()
-      others:Rep := empty()
+      candidates : Rep := empty()
+      others : Rep := empty()
 
       for tx in xx repeat
         if #tx.vec=1 then
-          candidates := cons(tx, candidates)
-        else
           others := cons(tx, others)
+        else
+          candidates := cons(tx, candidates)
 
       -- Do we have enough candidates?
       n := #candidates
@@ -901,8 +989,8 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       -- Search for matches and combine them
       while n > 2 repeat
         matched : Boolean := false
-        match:Rep := empty()
-        --remcandidates:Rep := empty()
+        match : Rep := empty()
+        remcandidates : Rep := empty()
 
         for i in 1..(n-2) repeat
           for j in (i+1)..(n-1) repeat
@@ -910,29 +998,26 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
               matched := match28inv?(candidates(i), candidates(j), candidates(k))
               if matched then
                 match := [candidates(i), candidates(j), candidates(k)]
-                candidates := delete(delete(delete(candidates, i), j), k)
-                --remcandidates := append(remcandidates, [candidates(s) for s in 1..(i-1)])
-                --remcandidates := append(remcandidates, [candidates(s) for s in (i+1)..(j-1)])
-                --remcandidates := append(remcandidates, [candidates(s) for s in (j+1)..(k-1)])
-                --remcandidates := append(remcandidates, [candidates(s) for s in (k+1)..n])
-                --candidates := remcandidates
+                remcandidates := append(remcandidates, [candidates(s) for s in 1..(i-1)])
+                remcandidates := append(remcandidates, [candidates(s) for s in (i+1)..(j-1)])
+                remcandidates := append(remcandidates, [candidates(s) for s in (j+1)..(k-1)])
+                remcandidates := append(remcandidates, [candidates(s) for s in (k+1)..n])
+                candidates := remcandidates
                 break
             if matched then break
           if matched then break
 
-        -- No match found
         not matched => break
         -- Combine terms in match found
         result := append(result, combine28inv(match(1), match(2), match(3)))
         n := #candidates
 
       -- Keep left-overs and append them to the result
-      if ~empty? candidates then
+      if not empty? candidates then
         result := append(result, candidates)
 
       append(result, others)
 
-------------------------------------------------------------------------------------------------
 
     match210inv?(t1:scaTerm, t2:scaTerm, t3:scaTerm) : Boolean ==
       -- Check if the coefficients allow for a match
@@ -993,21 +1078,6 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       -- Finally, the conditions to apply the rule is fulfilled
       -- for the given three terms!
       true
-
-
-    same?(ex1:List Term, ex2:List Term) : Boolean ==
-      nex1 := normalForm(ex1)
-      nex2 := normalForm(ex2)
-
-      #nex1 ~= #nex2 => false
-
-      for t1 in nex1 for t2 in nex2 repeat
-        ~ termEq?(t1, t2) => return false
-
-      true
-
-
-    import ToolsForSign(R)
 
 
     split210inv(t1:scaTerm, t2:scaTerm, t3:scaTerm) : List scaList ==

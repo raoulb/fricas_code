@@ -867,6 +867,71 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
 
     -- Combination type rules
 
+------------------------------------------------------------------------------------------------
+
+    rule28inv(x:Rep) : Rep ==
+      ++ This rule implements the contraction according to the axiom
+      ++ (d*a)*(b^c) + (d*b)*(c^a) + (d*c)*(a^b) = d*(abc)
+      xx := normalForm(x)
+
+      -- Expression is not a vector? No chance to ever apply the rule
+      not isVector?(per xx) => xx
+
+      -- Less than 3 terms? No chance to ever apply the rule
+      #xx < 3 => xx
+
+      -- See what we can do now
+      result : Rep := empty()
+
+      -- Search for candidates, they must have a single vector term
+      candidates:Rep := empty()
+      others:Rep := empty()
+
+      for tx in xx repeat
+        if #tx.vec=1 then
+          candidates := cons(tx, candidates)
+        else
+          others := cons(tx, others)
+
+      -- Do we have enough candidates?
+      n := #candidates
+      n < 3 => xx
+
+      -- Search for matches and combine them
+      while n > 2 repeat
+        matched : Boolean := false
+        match:Rep := empty()
+        --remcandidates:Rep := empty()
+
+        for i in 1..(n-2) repeat
+          for j in (i+1)..(n-1) repeat
+            for k in (j+1)..n repeat
+              matched := match28inv?(candidates(i), candidates(j), candidates(k))
+              if matched then
+                match := [candidates(i), candidates(j), candidates(k)]
+                candidates := delete(delete(delete(candidates, i), j), k)
+                --remcandidates := append(remcandidates, [candidates(s) for s in 1..(i-1)])
+                --remcandidates := append(remcandidates, [candidates(s) for s in (i+1)..(j-1)])
+                --remcandidates := append(remcandidates, [candidates(s) for s in (j+1)..(k-1)])
+                --remcandidates := append(remcandidates, [candidates(s) for s in (k+1)..n])
+                --candidates := remcandidates
+                break
+            if matched then break
+          if matched then break
+
+        -- No match found
+        not matched => break
+        -- Combine terms in match found
+        result := append(result, combine28inv(match(1), match(2), match(3)))
+        n := #candidates
+
+      -- Keep left-overs and append them to the result
+      if ~empty? candidates then
+        result := append(result, candidates)
+
+      append(result, others)
+
+------------------------------------------------------------------------------------------------
 
     match210inv?(t1:scaTerm, t2:scaTerm, t3:scaTerm) : Boolean ==
       -- Check if the coefficients allow for a match
@@ -1208,6 +1273,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       (rule="rule210")@Boolean => per rule210(rep x)
       (rule="rule211")@Boolean => per rule211(rep x)
 
+      (rule="rule28inv")@Boolean => per rule28inv(rep x)
       (rule="rule210inv")@Boolean => per rule210inv(rep x)
       -- Specified rule not valid
       x

@@ -17,7 +17,7 @@ VectorSpaceCategory(R : Field) : Category == CoercibleTo(OutputForm) with
     "-": (%, %) -> %
     "-": % -> %
 
-    -- Multiplication by scalars from base field / ring
+    -- Multiplication by scalars from base field
     "*": (R, %) -> %
     "*": (%, R) -> %
 
@@ -89,6 +89,7 @@ VectorAlgebraCategory(R : Field) : Category == VectorSpaceCategory(R) with
 
     s3p: (%, %, %) -> %
       ++ Triple vector product
+      -- Consider construct operation?
 
     simplify: % -> %
       ++ Simplify a given vector expression by first
@@ -246,8 +247,8 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
     isScalar?(x:%) : Boolean ==
       xx := rep x
       empty? xx => false
-      result := true
       -- Search if there is a term which is not a scalar
+      result := true
       for tx in xx repeat
         not empty? tx.vec => (result := false)
       result

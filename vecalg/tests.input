@@ -1,14 +1,22 @@
-va := vector(a)$VA(FRAC INT)
-vb := vector(b)$VA(FRAC INT)
-vc := vector(c)$VA(FRAC INT)
-vd := vector(d)$VA(FRAC INT)
-ve := vector(e)$VA(FRAC INT)
-vf := vector(f)$VA(FRAC INT)
-vg := vector(g)$VA(FRAC INT)
-vh := vector(h)$VA(FRAC INT)
-vi := vector(i)$VA(FRAC INT)
-v0 := vectorZero()$VA(FRAC INT)
-s0 := scalarZero()$VA(FRAC INT)
+-- )read tests.input
+
+Z ==> Integer
+Q ==> Fraction Z
+VA ==> VectorAlgebra(Q)
+
+import from VA
+
+va := vector(a)$VA
+vb := vector(b)$VA
+vc := vector(c)$VA
+vd := vector(d)$VA
+ve := vector(e)$VA
+vf := vector(f)$VA
+vg := vector(g)$VA
+vh := vector(h)$VA
+vi := vector(i)$VA
+v0 := vectorZero()$VA
+s0 := scalarZero()$VA
 
 -- Test some simple arithmetic
 -va

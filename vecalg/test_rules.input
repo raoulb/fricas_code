@@ -30,7 +30,7 @@ simplify(rhs28 - lhs28)
 
 -- Rule 29
 -- (d^e) * (abc) = (b^c)*(d^e) * a + (c^a)*(d^e) * b + (a^b)*(d^e) * c
-lhs29 := (abc) * (d^e)
+lhs29 := s3p(a,b,c) * (d^e)
 rhs29 := (b^c)*(d^e)*a + (c^a)*(d^e)*b + (a^b)*(d^e)*c
 
 rhs29a := applyRule(lhs29, "rule29")

@@ -341,22 +341,14 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
 
     -- Normal form
 
-    normalForm(xx:Rep) : Rep ==
+    normalForm(x:Rep) : Rep ==
       ++ Bring the vector expression into a normal form of type [coef, sca, vec]
       ++ Example of a normal form:
       ++ -2 * (a.b)*(abc) * (c^d)
       ++ [-2, [[a, b],[a, b, c]], [c, d]]
-      -- for all tx in xx
-      --   make scalar part and vector part in ascending order
-      --   use transformation rules to check for zero (not here)
-      --   collect non-zero terms in yy
-      --   make yy in ascending order
-      --   combine same terms (not here)
-      -- return y
-
       result : Rep := empty()
 
-      for tx in xx repeat
+      for tx in x repeat
         -- Result term
         nt : Term := [tx.coe, [], []]
 
@@ -366,20 +358,18 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
 
         for sp in scaParts repeat
           if #sp = 1 then
-            -- A single scalar part
+            -- A single scalar
             nsp := cons(sp, nsp)
-
           else if #sp = 2 then
             -- A scalar product
             -- Axiom 2.2 applies: a*b = b*a
             nsp := cons(sort(sp), nsp)
-
           else if #sp = 3 then
             -- A scalar triple product
-            -- Axiom 2.3 applies: [abc] = [bca] = [cab] = -[acb] = -[cba] = -[bac]
+            -- Axiom 2.3 applies: (abc) = (bca) = (cab) = -(acb) = -(cba) = -(bac)
             r := countingBubbleSort(sp)$CountingSortPackage(String, List(String))
             nsp := cons(r.sorted, nsp)
-            if odd? r.exchanges then nt.coe := -nt.coe
+            odd? r.exchanges => nt.coe := -nt.coe
 
         -- Sort the scalar parts
         nt.sca := sort(listOrder?, nsp)
@@ -389,15 +379,14 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
         nvp : vecPart := empty()
 
         if #vp = 1 then
-          -- A single vector part
+          -- A single vector
           nvp := vp
-
         else if #vp = 2 then
           -- A vector product
           -- Axiom 2.2 applies: a^b = -b^a
           r := countingBubbleSort(vp)$CountingSortPackage(String, List(String))
           nvp := r.sorted
-          if odd? r.exchanges then nt.coe := -nt.coe
+          odd? r.exchanges => nt.coe := -nt.coe
 
         nt.vec := nvp
 

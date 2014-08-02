@@ -91,6 +91,14 @@ VectorAlgebraCategory(R : Field) : Category == VectorSpaceCategory(R) with
       ++ Triple vector product
       -- Consider construct operation?
 
+    normalize: % -> %
+      ++ Bring the vector expression into a normal form
+      ++ of type [coef, sca, vec]
+      ++ Example of a normal form:
+      ++ -2 * (a.b)*(abc) * (c^d)
+      ++ [-2, [[a, b],[a, b, c]], [c, d]]
+      -- Put this into the domain?
+
     simplify: % -> %
       ++ Simplify a given vector expression by first
       ++ bring it to the normal form, then apply
@@ -423,11 +431,12 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       reverse! result
 
 
-    removeZeroes(xx:Rep) : Rep ==
-      -- Check for and remove zeroes:
-      --   coe = 0
-      --   sca is zero
-      --   vec is zero
+    removeZeros(xx:Rep) : Rep ==
+      ++ Check for and remove zeros from the given expression.
+      ++ A term is zero if
+      ++   coe = 0
+      ++   sca is zero
+      ++   vec is zero
       -- We have
       --   a^a -> 0 and 0^a -> 0 and a^0 -> 0
       --   (aab) -> 0 and (abb) -> 0 and (aba) -> 0
@@ -436,31 +445,39 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       result : Rep := empty()
 
       for tx in xx repeat
+        -- Zero vectors
         szero? tx => "iterate"
         vzero? tx => "iterate"
-
-        -- Axiom: a^a = 0
+        -- Axiom 2.1: cross product a^a = 0
         vp := tx.vec
         #vp = 2 and vp(1) = vp(2) => "iterate"
-
-        -- Axiom: (a,a,b) = (a,b,a) = (b,a,a) = 0
+        -- Axiom 2.4: triple product (a,a,b) = (a,b,a) = (b,a,a) = 0
         --sp := tx.sca
         tpzero : Boolean := false
         for s in tx.sca repeat
           if #s = 3 then
             s(1) = s(2) or s(1) = s(3) or s(2) = s(3) => tpzero := true
-
         tpzero => "iterate"
-
-        -- Term contains no known zeros
+        -- Term contains no recognised zeros
         result := cons(tx, result)
 
-      -- No terms left? Construct a single zero
+      -- If the expression is equal zero, construct a single zero term
       if empty? result then
         isScalar?(per xx) => result := rep scalarZero()
         isVector?(per xx) => result := rep vectorZero()
 
       reverse! result
+
+
+    normalize(x:%) : % ==
+      ++ Normalize the given expression. Put in into the normal form
+      ++ then combine terms with identical scalar and vector parts
+      ++ and finally remove zero terms.
+      y := rep x
+      y := normalForm(y)
+      y := combineTerms(y)
+      y := removeZeros(y)
+      per y
 
 
 
@@ -476,13 +493,10 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
 
       true
 
-
-
-
-
-
-    normalize(x:%) : % ==
-      per normalForm(rep x)
+      --z:=simplify(x-y);
+      --zz:=rep z;
+      --#zz=1 and (vzero?(first(zz)) or szero?(first(zz))) => true;
+      --false;
 
 
     -- Implementation of algebraic operations
@@ -1298,7 +1312,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
     simplify(x:%) : % ==
       xx := normalForm(rep x)
       xx := combineTerms(xx)
-      xx := removeZeroes(xx)
+      xx := removeZeros(xx)
       per xx
 
 

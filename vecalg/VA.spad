@@ -165,12 +165,12 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
 
     -- Further structures used for contraction rules
     scaTerm ==> Record(coe2:R, sca2:scaPart)
-    scaList ==> List(scaTerm)
-    mixTerm ==> Record(scal: scaList, vec2: vecPart)
+    scaList ==> List scaTerm
+    mixTerm ==> Record(scal:scaList, vec2:vecPart)
 
     -- Distribute a mixed term into ordinary terms
-    distribute(mt:mixTerm) : List Term ==
-      lt : List Term := empty()
+    distribute(mt:mixTerm) : Rep ==
+      lt : Rep := empty()
       for t in mt.scal repeat
         lt := cons([t.coe2, t.sca2, mt.vec2], lt)
       reverse! lt
@@ -648,7 +648,9 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       reverse! result
 
 
-    same?(ex1:List Term, ex2:List Term) : Boolean ==
+
+
+    same?(ex1:Rep, ex2:Rep) : Boolean ==
       nex1 := normalForm(ex1)
       nex2 := normalForm(ex2)
 
@@ -682,8 +684,8 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
           found := false
           scaTerms := tx.sca
           n := #scaTerms
-          atp : List String := empty()
-          others : List List String := empty()
+          atp : vecPart := empty()
+          others : scaPart := empty()
 
           -- Take out the first single triple product
           for i in 1..n repeat
@@ -734,8 +736,8 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
           found := false
           scaTerms := tx.sca
           n := #scaTerms
-          atp:List String := empty()
-          others:List List String := empty()
+          atp : vecPart := empty()
+          others : scaPart := empty()
 
           -- Take out the first triple product
           for i in 1..n repeat
@@ -788,9 +790,9 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
           foundtp := false
           scaTerms := tx.sca
           n := #scaTerms
-          adp : List String := empty()
-          atp : List String := empty()
-          others : List List String := empty()
+          adp : vecPart := empty()
+          atp : vecPart := empty()
+          others : scaPart := empty()
 
           -- Take out the first dot and triple product
           for i in 1..n repeat
@@ -845,8 +847,8 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
         else
           scaTerms := tx.sca
           n := #scaTerms
-          tps : List List String := empty()
-          others : List List String := empty()
+          tps : scaPart := empty()
+          others : scaPart := empty()
 
           -- Take out the first two triple products
           for i in 1..n repeat
@@ -891,10 +893,10 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       l1 := set(p1.sca)
       l2 := set(p2.sca)
       l3 := set(p3.sca)
-      sg := intersect([l1, l2, l3])$SetTools(List String)
-      s1 := coerce(difference(l1, sg))$SetTools(List String)
-      s2 := coerce(difference(l2, sg))$SetTools(List String)
-      s3 := coerce(difference(l3, sg))$SetTools(List String)
+      sg := intersect([l1, l2, l3])$SetTools(vecPart)
+      s1 := coerce(difference(l1, sg))$SetTools(vecPart)
+      s2 := coerce(difference(l2, sg))$SetTools(vecPart)
+      s3 := coerce(difference(l3, sg))$SetTools(vecPart)
 
       not  (#s1=1 and #s2=1 and #s3=1
         and #s1(1)=#s2(1) and #s2(1)=#s3(1)
@@ -918,17 +920,17 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       true
 
 
-    combine28inv(p1:Term, p2:Term, p3:Term) : List Term ==
+    combine28inv(p1:Term, p2:Term, p3:Term) : Rep ==
       l1 := set(p1.sca)
       l2 := set(p2.sca)
       l3 := set(p3.sca)
 
-      sg := intersect([l1, l2, l3])$SetTools(List String)
-      lg := coerce(sg)$SetTools(List String)
+      sg := intersect([l1, l2, l3])$SetTools(vecPart)
+      lg := coerce(sg)$SetTools(vecPart)
 
-      s1 := coerce(difference(l1, sg))$SetTools(List String)
-      s2 := coerce(difference(l2, sg))$SetTools(List String)
-      s3 := coerce(difference(l3, sg))$SetTools(List String)
+      s1 := coerce(difference(l1, sg))$SetTools(vecPart)
+      s2 := coerce(difference(l2, sg))$SetTools(vecPart)
+      s3 := coerce(difference(l3, sg))$SetTools(vecPart)
 
       t11 := set(s1(1))
       t21 := set(s2(1))
@@ -1031,16 +1033,16 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       l1 := set(t1.sca2)
       l2 := set(t2.sca2)
       l3 := set(t3.sca2)
-      li := intersect([l1,l2,l3])$SetTools(List String)
+      li := intersect([l1,l2,l3])$SetTools(vecPart)
       s1 := difference(l1, li)
       s2 := difference(l2, li)
       s3 := difference(l3, li)
 
       -- There must be exactly two scalar parts left, one with 2 elements
       -- (scalar products) the other with three (triple products).
-      ll1 := coerce(s1)$SetTools(List String)
-      ll2 := coerce(s2)$SetTools(List String)
-      ll3 := coerce(s3)$SetTools(List String)
+      ll1 := coerce(s1)$SetTools(vecPart)
+      ll2 := coerce(s2)$SetTools(vecPart)
+      ll3 := coerce(s3)$SetTools(vecPart)
       not(
           #ll1 = 2 and #ll2 = 2 and #ll3 = 2
           and
@@ -1055,8 +1057,8 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       -- Unify the scalar product and triple product parts
       --uspp := set(reduce(concat, [sl1(1), sl2(1), sl3(1)]))$Set(String)
       --utpp := set(reduce(concat, [sl1(2), sl2(2), sl3(2)]))$Set(String)
-      pp1 := map(set$Set(String), [sl1(1), sl2(1), sl3(1)])$ListFunctions2(List String, Set String)
-      pp2 := map(set$Set(String), [sl1(2), sl2(2), sl3(2)])$ListFunctions2(List String, Set String)
+      pp1 := map(set$Set(String), [sl1(1), sl2(1), sl3(1)])$ListFunctions2(vecPart, Set String)
+      pp2 := map(set$Set(String), [sl1(2), sl2(2), sl3(2)])$ListFunctions2(vecPart, Set String)
 
       uspp := union(pp1)$SetTools(String)
       utpp := union(pp2)$SetTools(String)
@@ -1146,7 +1148,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       [c, r]
 
 
-    combine210inv(mt:mixTerm) : List Term ==
+    combine210inv(mt:mixTerm) : Rep ==
       t1 := (mt.scal)(1)
       t2 := (mt.scal)(2)
       t3 := (mt.scal)(3)
@@ -1154,17 +1156,17 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       l1 := set(t1.sca2)
       l2 := set(t2.sca2)
       l3 := set(t3.sca2)
-      li := intersect([l1,l2,l3])$SetTools(List String)
+      li := intersect([l1,l2,l3])$SetTools(vecPart)
       s1 := difference(l1, li)
       s2 := difference(l2, li)
       s3 := difference(l3, li)
 
       -- There must be exactly two scalar parts left, one with 2 elements
       -- (scalar products) the other with three (triple products).
-      ll1 := coerce(s1)$SetTools(List String)
-      ll2 := coerce(s2)$SetTools(List String)
-      ll3 := coerce(s3)$SetTools(List String)
-      lli := coerce(li)$SetTools(List String)
+      ll1 := coerce(s1)$SetTools(vecPart)
+      ll2 := coerce(s2)$SetTools(vecPart)
+      ll3 := coerce(s3)$SetTools(vecPart)
+      lli := coerce(li)$SetTools(vecPart)
 
       -- Sort the scalar parts of all pieces
       sl1 := sort(listOrder?, ll1)
@@ -1172,8 +1174,8 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       sl3 := sort(listOrder?, ll3)
 
       -- Unify the scalar product and triple product parts
-      pp1 := map(set$Set(String), [sl1(1), sl2(1), sl3(1)])$ListFunctions2(List String, Set String)
-      pp2 := map(set$Set(String), [sl1(2), sl2(2), sl3(2)])$ListFunctions2(List String, Set String)
+      pp1 := map(set$Set(String), [sl1(1), sl2(1), sl3(1)])$ListFunctions2(vecPart, Set String)
+      pp2 := map(set$Set(String), [sl1(2), sl2(2), sl3(2)])$ListFunctions2(vecPart, Set String)
 
       uspp := union(pp1)$SetTools(String)
       utpp := union(pp2)$SetTools(String)
@@ -1409,7 +1411,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       ++ Custom latex printing output routine.
       ++ A desperate try to "fix" the broken output.
       xx := normalForm(rep x)
-      o : List String := empty()
+      o : vecPart := empty()
 
       -- Loop over all terms
       for tx in xx repeat
@@ -1427,7 +1429,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
 
         -- Scalar part
         if not empty? tx.sca then
-          oscal:List String := empty()
+          oscal : vecPart := empty()
           for asca in tx.sca repeat
             if #asca = 1 then
               s1 := string(asca(1)::Symbol)

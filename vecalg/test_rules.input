@@ -4,8 +4,6 @@ Z ==> Integer
 Q ==> Fraction Z
 VA ==> VectorAlgebra(Q)
 
-import from VA
-
 a := vector("a")$VA
 b := vector("b")$VA
 c := vector("c")$VA

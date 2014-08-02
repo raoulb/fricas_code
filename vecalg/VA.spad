@@ -251,7 +251,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       -- Search if there is a term which is not a scalar
       result := true
       for tx in xx repeat
-        not empty? tx.vec => (result := false)
+        not empty? tx.vec => result := false
       result
 
     isVector?(x:%) : Boolean ==
@@ -260,7 +260,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       -- Search if there is a term which is not a vector
       result := true
       for tx in xx repeat
-        empty? tx.vec => (result := false)
+        empty? tx.vec => result := false
       result
 
 
@@ -273,34 +273,22 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       n2 := #v2
       n1 < n2 => true
       n1 > n2 => false
-
       -- Case n1 = n2
       result := true
       for i in 1..n1 repeat
-        if v1(i) < v2(i) then
-          result := true
-          break
-
-        if v1(i) > v2(i) then
-          result := false
-          break
-
+        v1(i) < v2(i) => result := true
+        v1(i) > v2(i) => result := false
       result
 
     listEq?(v1:vecPart, v2:vecPart) : Boolean ==
       empty? v1 and empty? v2 => true
-      empty? v1 and not empty? v2 => false
       n1 := #v1
       n2 := #v2
       n1 ~= n2 => false
-
       -- Case n1 = n2
       result := true
       for i in 1..n1 repeat
-        if v1(i) ~= v2(i) then
-          result := false
-          break
-
+        v1(i) ~= v2(i) => result := false
       result
 
     listListOrder?(s1:scaPart, s2:scaPart) : Boolean ==
@@ -310,34 +298,22 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       n2 := #s2
       n1 < n2 => true
       n1 > n2 => false
-      result := true
-
       -- Case n1 = n2
+      result := true
       for i in 1..n1 repeat
-        if listOrder?(s1(i), s2(i)) and not listEq?(s1(i), s2(i)) then
-          result := true
-          break
-
-        if not listOrder?(s1(i), s2(i)) then
-          result := false
-          break
-
+        listOrder?(s1(i), s2(i)) and not listEq?(s1(i), s2(i)) => result := true
+        not listOrder?(s1(i), s2(i)) => result := false
       result
 
     listListEq?(s1:scaPart, s2:scaPart) : Boolean ==
       empty? s1 and empty? s2 => true
-      empty? s1 and not empty? s2 => false
       n1 := #s1
       n2 := #s2
       n1 ~= n2 => false
-      result := true
-
       -- Case n1 = n2
+      result := true
       for i in 1..n1 repeat
-        if not listEq?(s1(i), s2(i)) then
-          result := false
-          break
-
+        not listEq?(s1(i), s2(i)) => result := false
       result
 
     termOrder?(t1:Term, t2:Term) : Boolean ==
@@ -354,6 +330,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
 
     termEq?(t1:Term, t2:Term) : Boolean ==
       t1.coe = t2.coe and listListEq?(t1.sca, t2.sca) and listEq?(t1.vec, t2.vec) => true
+      false
 
     scalarPartEq?(t1:Term, t2:Term) : Boolean ==
       listListEq?(t1.sca, t2.sca)
@@ -362,12 +339,13 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       listEq?(t1.vec, t2.vec)
 
 
-    -- Bring the vector expression into a normal form
-    -- of type [coef, sca, vec]
-    -- Example of a normal form:
-    -- -2 * (a.b)*(abc) * (c^d)
-    -- [-2, [[a, b],[a, b, c]], [c, d]]
+    -- Normal form
+
     normalForm(xx:Rep) : Rep ==
+      ++ Bring the vector expression into a normal form of type [coef, sca, vec]
+      ++ Example of a normal form:
+      ++ -2 * (a.b)*(abc) * (c^d)
+      ++ [-2, [[a, b],[a, b, c]], [c, d]]
       -- for all tx in xx
       --   make scalar part and vector part in ascending order
       --   use transformation rules to check for zero (not here)
@@ -428,6 +406,91 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
 
       -- Sort the terms in the result
       result := sort!(termOrder?, result)
+
+
+
+    combineTerms(xx:Rep) : Rep ==
+      result:Rep := empty()
+      n : NNI := #xx
+      i : NNI := 1
+
+      while i <= n repeat
+        -- Current term
+        ta := xx(i)
+        cnew := ta.coe
+
+        -- Collect all following terms that are equal to current
+        j : NNI := i + 1
+        while j <= n and scalarPartEq?(ta, xx(j)) and vectorPartEq?(ta, xx(j)) repeat
+          cnew := cnew + xx(j).coe
+          j := j + 1
+
+        -- Combine and append
+        tnew:Term := [cnew, ta.sca, ta.vec]@Term
+        result := cons(tnew, result)
+
+        -- Continue with the first non-equal term
+        i := j
+
+      reverse! result
+
+
+    removeZeroes(xx:Rep) : Rep ==
+      -- Check for and remove zeroes:
+      --   coe = 0
+      --   sca is zero
+      --   vec is zero
+      -- We have
+      --   a^a -> 0 and 0^a -> 0 and a^0 -> 0
+      --   (aab) -> 0 and (abb) -> 0 and (aba) -> 0
+      -- With assumptions we could also do
+      --   a*b -> 0 for a _|_ b
+      result : Rep := empty()
+
+      for tx in xx repeat
+        szero? tx => "iterate"
+        vzero? tx => "iterate"
+
+        -- Axiom: a^a = 0
+        vp := tx.vec
+        #vp = 2 and vp(1) = vp(2) => "iterate"
+
+        -- Axiom: (a,a,b) = (a,b,a) = (b,a,a) = 0
+        --sp := tx.sca
+        tpzero : Boolean := false
+        for s in tx.sca repeat
+          if #s = 3 then
+            s(1) = s(2) or s(1) = s(3) or s(2) = s(3) => tpzero := true
+
+        tpzero => "iterate"
+
+        -- Term contains no known zeros
+        result := cons(tx, result)
+
+      -- No terms left? Construct a single zero
+      if empty? result then
+        isScalar?(per xx) => result := rep scalarZero()
+        isVector?(per xx) => result := rep vectorZero()
+
+      reverse! result
+
+
+
+
+    same?(ex1:Rep, ex2:Rep) : Boolean ==
+      nex1 := normalForm(ex1)
+      nex2 := normalForm(ex2)
+
+      (#nex1 ~= #nex2) => false
+
+      for t1 in nex1 for t2 in nex2 repeat
+        not termEq?(t1, t2) => false
+
+      true
+
+
+
+
 
 
     normalize(x:%) : % ==
@@ -527,7 +590,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
 
 
     -- Wedge or cross-product of two vectors
-    (x:% ^ y:%) :% ==
+    (x:% ^ y:%) : % ==
       not isVector?(x) or not isVector?(y) => error "Wedge product can not contain scalar elements"
 
       xx := rep x
@@ -578,88 +641,6 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
     -- Equivalence of vector expressions
     (x:% = y:%) : Boolean ==
       identity?(x, y)
-
-
-    -- Simple transformations
-
-    combineTerms(xx:Rep) : Rep ==
-      result:Rep := empty()
-      n : NNI := #xx
-      i : NNI := 1
-
-      while i <= n repeat
-        -- Current term
-        ta := xx(i)
-        cnew := ta.coe
-
-        -- Collect all following terms that are equal to current
-        j : NNI := i + 1
-        while j <= n and scalarPartEq?(ta, xx(j)) and vectorPartEq?(ta, xx(j)) repeat
-          cnew := cnew + xx(j).coe
-          j := j + 1
-
-        -- Combine and append
-        tnew:Term := [cnew, ta.sca, ta.vec]@Term
-        result := cons(tnew, result)
-
-        -- Continue with the first non-equal term
-        i := j
-
-      reverse! result
-
-
-    removeZeroes(xx:Rep) : Rep ==
-      -- Check for and remove zeroes:
-      --   coe = 0
-      --   sca is zero
-      --   vec is zero
-      -- We have
-      --   a^a -> 0 and 0^a -> 0 and a^0 -> 0
-      --   (aab) -> 0 and (abb) -> 0 and (aba) -> 0
-      -- With assumptions we could also do
-      --   a*b -> 0 for a _|_ b
-      result : Rep := empty()
-
-      for tx in xx repeat
-        szero? tx => "iterate"
-        vzero? tx => "iterate"
-
-        -- Axiom: a^a = 0
-        vp := tx.vec
-        #vp = 2 and vp(1) = vp(2) => "iterate"
-
-        -- Axiom: (a,a,b) = (a,b,a) = (b,a,a) = 0
-        --sp := tx.sca
-        tpzero : Boolean := false
-        for s in tx.sca repeat
-          if #s = 3 then
-            s(1) = s(2) or s(1) = s(3) or s(2) = s(3) => tpzero := true
-
-        tpzero => "iterate"
-
-        -- Term contains no known zeros
-        result := cons(tx, result)
-
-      -- No terms left? Construct a single zero
-      if empty? result then
-        isScalar?(per xx) => result := rep scalarZero()
-        isVector?(per xx) => result := rep vectorZero()
-
-      reverse! result
-
-
-
-
-    same?(ex1:Rep, ex2:Rep) : Boolean ==
-      nex1 := normalForm(ex1)
-      nex2 := normalForm(ex2)
-
-      (#nex1 ~= #nex2) => false
-
-      for t1 in nex1 for t2 in nex2 repeat
-        not termEq?(t1, t2) => false
-
-      true
 
 
     -- Transformation rules based on the axioms

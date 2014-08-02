@@ -397,27 +397,26 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       result := sort!(termOrder?, result)
 
 
-
-    combineTerms(xx:Rep) : Rep ==
-      result:Rep := empty()
-      n : NNI := #xx
+    combineTerms(x:Rep) : Rep ==
+      ++ Combine terms in an expression. This function assumes
+      ++ the terms in the expression given are already sorted
+      ++ with respect to the term order defined.
+      result : Rep := empty()
       i : NNI := 1
+      n : NNI := #x
 
       while i <= n repeat
         -- Current term
-        ta := xx(i)
+        ta := x(i)
         cnew := ta.coe
-
         -- Collect all following terms that are equal to current
         j : NNI := i + 1
-        while j <= n and scalarPartEq?(ta, xx(j)) and vectorPartEq?(ta, xx(j)) repeat
-          cnew := cnew + xx(j).coe
+        while j <= n and scalarPartEq?(ta, x(j)) and vectorPartEq?(ta, x(j)) repeat
+          cnew := cnew + x(j).coe
           j := j + 1
-
         -- Combine and append
-        tnew:Term := [cnew, ta.sca, ta.vec]@Term
+        tnew : Term := [cnew, ta.sca, ta.vec]
         result := cons(tnew, result)
-
         -- Continue with the first non-equal term
         i := j
 

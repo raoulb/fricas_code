@@ -2,7 +2,7 @@
 )abbrev category VSC VectorSpaceCategory
 ++ Author: Raoul Bourquin
 ++ Date Created: 7 October 2012
-++ Date Last Updated: 27 July 2014
+++ Date Last Updated: 3 August 2014
 ++ Description:
 ++ Implementation of component-free vector algebra
 ++ based on the techniques described in the paper
@@ -25,6 +25,7 @@ VectorSpaceCategory(R : Field) : Category == CoercibleTo(OutputForm) with
     "=": (%, %) -> Boolean
 
   add
+
     (x:% - y:%) :% == x + (-1)::R * y
     (-x:%) :% == (-1)::R * x
     (x:% * r:R) :% == r * x
@@ -37,7 +38,7 @@ VectorSpaceCategory(R : Field) : Category == CoercibleTo(OutputForm) with
 )abbrev category VAC VectorAlgebraCategory
 ++ Author: Raoul Bourquin
 ++ Date Created: 7 October 2012
-++ Date Last Updated: 27 July 2014
+++ Date Last Updated: 3 August 2014
 ++ Description:
 ++ Implementation of component-free vector algebra
 ++ based on the techniques described in the paper
@@ -91,30 +92,11 @@ VectorAlgebraCategory(R : Field) : Category == VectorSpaceCategory(R) with
       ++ Triple vector product
       -- Consider construct operation?
 
-    normalize: % -> %
-      ++ Bring the vector expression into a normal form
-      ++ of type [coef, sca, vec]
-      ++ Example of a normal form:
-      ++ -2 * (a.b)*(abc) * (c^d)
-      ++ [-2, [[a, b],[a, b, c]], [c, d]]
-      -- Put this into the domain?
-
-    simplify: % -> %
-      ++ Simplify a given vector expression by first
-      ++ bring it to the normal form, then apply
-      ++ transformation rules
-
     identity?: (%, %) -> Boolean
       ++ Check if two expressions are equal in value
 
     coerce: % -> OutputForm
       ++
-
-    applyRule: (%, String) -> %
-      ++
-      -- Put this into the domain?
-
-    latex: % -> String
 
   add
 
@@ -125,15 +107,15 @@ VectorAlgebraCategory(R : Field) : Category == VectorSpaceCategory(R) with
 )abbrev domain VA VectorAlgebra
 ++ Author: Raoul Bourquin
 ++ Date Created: 7 October 2012
-++ Date Last Updated: 27 July 2014
+++ Date Last Updated: 3 August 2014
 ++ Description:
 ++ Implementation of component-free vector algebra
 ++ based on the techniques described in the paper
 ++ "Rule-Based Simplification in Vector-Product Spaces"
 ++ by Songxin Liang and David J. Jeffrey
-VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
+VectorAlgebra(R : Field) : Exports == Implementation where
 
-  Exports == with
+  Exports == VectorAlgebraCategory(R) with
 
     normalize: % -> %
       ++ Bring the vector expression into a normal form
@@ -142,8 +124,19 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       ++ -2 * (a.b)*(abc) * (c^d)
       ++ [-2, [[a, b],[a, b, c]], [c, d]]
 
+    simplify: % -> %
+      ++ Simplify a given vector expression by first
+      ++ bring it to the normal form, then apply
+      ++ transformation rules
+
     applyRule: (%, String) -> %
-      ++
+      ++ Apply a transformation rule to the given
+      ++ expression. Valid rules are expansion
+      ++ and contraction rules.
+
+    latex: % -> String
+      ++ Helper function.
+      -- TODO: Remove
 
   Implementation == add
 

@@ -111,6 +111,8 @@ VectorAlgebraCategory(R : Field) : Category == VectorSpaceCategory(R) with
       ++
 
     applyRule: (%, String) -> %
+      ++
+      -- Put this into the domain?
 
     latex: % -> String
 
@@ -140,12 +142,8 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       ++ -2 * (a.b)*(abc) * (c^d)
       ++ [-2, [[a, b],[a, b, c]], [c, d]]
 
-    --termOrder:
-    -- What can we gain by exporting this?
-      ++ Reorder the terms by the term order constructed
-
-    --applyRule: (%, String) -> %
-
+    applyRule: (%, String) -> %
+      ++
 
   Implementation == add
 
@@ -233,6 +231,7 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
     zero?(x:%) : Boolean ==
       xx := rep x
       result := true
+      -- Search if there is a term which is not zero
       for tx in xx repeat
         not szero? tx and not vzero? tx => result := false
       result
@@ -473,30 +472,22 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       ++ Normalize the given expression. Put in into the normal form
       ++ then combine terms with identical scalar and vector parts
       ++ and finally remove zero terms.
-      y := rep x
-      y := normalForm(y)
-      y := combineTerms(y)
-      y := removeZeros(y)
-      per y
+      xx := rep x
+      xx := normalForm(xx)
+      xx := combineTerms(xx)
+      xx := removeZeros(xx)
+      per xx
 
 
-
-
-    same?(ex1:Rep, ex2:Rep) : Boolean ==
+    exprEq?(ex1:Rep, ex2:Rep) : Boolean ==
       nex1 := normalForm(ex1)
       nex2 := normalForm(ex2)
-
-      (#nex1 ~= #nex2) => false
-
+      -- Same number of terms?
+      #nex1 ~= #nex2 => false
+      -- All terms equal?
       for t1 in nex1 for t2 in nex2 repeat
         not termEq?(t1, t2) => false
-
       true
-
-      --z:=simplify(x-y);
-      --zz:=rep z;
-      --#zz=1 and (vzero?(first(zz)) or szero?(first(zz))) => true;
-      --false;
 
 
     -- Implementation of algebraic operations
@@ -933,12 +924,12 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       tp1 : Term := [p1.coe, cons([d, a], lg), [b, c]]
       tp2 : Term := [p1.coe, cons([d, b], lg), [c, a]]
       tp3 : Term := [p1.coe, cons([d, c], lg), [a, b]]
-      same?([tp1, tp2, tp3], [p1, p2, p3]) => [[p1.coe, cons([a, b, c], lg), [d]]]
+      exprEq?([tp1, tp2, tp3], [p1, p2, p3]) => [[p1.coe, cons([a, b, c], lg), [d]]]
 
       tp1 : Term := [p1.coe, cons([d, a], lg), [c, b]]
       tp2 : Term := [p1.coe, cons([d, b], lg), [a, c]]
       tp3 : Term := [p1.coe, cons([d, c], lg), [b, a]]
-      same?([tp1, tp2, tp3], [p1, p2, p3]) => [[p1.coe, cons([a, c, b], lg), [d]]]
+      exprEq?([tp1, tp2, tp3], [p1, p2, p3]) => [[p1.coe, cons([a, c, b], lg), [d]]]
 
       [p1, p2, p3]
 
@@ -1179,54 +1170,54 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
       tp1 : Term := [co, append([[d,a],[h,b,c]],lli), mt.vec2]
       tp2 : Term := [co, append([[d,b],[a,h,c]],lli), mt.vec2]
       tp3 : Term := [co, append([[d,c],[a,b,h]],lli), mt.vec2]
-      same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[a,b,c]],lli), mt.vec2]]
+      exprEq?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[a,b,c]],lli), mt.vec2]]
 
       tp1 : Term := [co, append([[d,a],[h,c,b]],lli), mt.vec2]
       tp2 : Term := [co, append([[d,c],[a,h,b]],lli), mt.vec2]
       tp3 : Term := [co, append([[d,b],[a,c,h]],lli), mt.vec2]
-      same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[a,c,b]],lli), mt.vec2]]
+      exprEq?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[a,c,b]],lli), mt.vec2]]
 
       tp1 : Term := [co, append([[d,b],[h,a,c]],lli), mt.vec2]
       tp2 : Term := [co, append([[d,a],[b,h,c]],lli), mt.vec2]
       tp3 : Term := [co, append([[d,c],[b,a,h]],lli), mt.vec2]
-      same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[b,a,c]],lli), mt.vec2]]
+      exprEq?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[b,a,c]],lli), mt.vec2]]
 
       tp1 : Term := [co, append([[d,b],[h,c,a]],lli), mt.vec2]
       tp2 : Term := [co, append([[d,c],[b,h,a]],lli), mt.vec2]
       tp3 : Term := [co, append([[d,a],[b,c,h]],lli), mt.vec2]
-      same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[b,c,a]],lli), mt.vec2]]
+      exprEq?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[b,c,a]],lli), mt.vec2]]
 
       tp1 : Term := [co, append([[d,c],[h,a,b]],lli), mt.vec2]
       tp2 : Term := [co, append([[d,a],[c,h,b]],lli), mt.vec2]
       tp3 : Term := [co, append([[d,b],[c,a,h]],lli), mt.vec2]
-      same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[c,a,b]],lli), mt.vec2]]
+      exprEq?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[c,a,b]],lli), mt.vec2]]
 
       tp1 : Term := [co, append([[d,c],[h,b,a]],lli), mt.vec2]
       tp2 : Term := [co, append([[d,b],[c,h,a]],lli), mt.vec2]
       tp3 : Term := [co, append([[d,a],[c,b,h]],lli), mt.vec2]
-      same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[c,b,a]],lli), mt.vec2]]
+      exprEq?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[c,b,a]],lli), mt.vec2]]
 
       -- Original code
 
       -- tp1 : Term := [co, append([[d,a],[h,b,c]],lli), mt.vec2]
       -- tp2 : Term := [co, append([[d,b],[a,h,c]],lli), mt.vec2]
       -- tp3 : Term := [co, append([[d,c],[a,b,h]],lli), mt.vec2]
-      -- same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[a,b,c]],lli), mt.vec2]]
+      -- exprEq?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[a,b,c]],lli), mt.vec2]]
 
       -- tp1 : Term := [co, append([[h,a],[d,b,c]],lli), mt.vec2]
       -- tp2 : Term := [co, append([[h,b],[a,d,c]],lli), mt.vec2]
       -- tp3 : Term := [co, append([[h,c],[a,b,d]],lli), mt.vec2]
-      -- same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[h,d],[a,b,c]],lli), mt.vec2]]
+      -- exprEq?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[h,d],[a,b,c]],lli), mt.vec2]]
 
       -- tp1 : Term := [co, append([[d,a],[h,c,b]],lli), mt.vec2]
       -- tp2 : Term := [co, append([[d,c],[a,h,b]],lli), mt.vec2]
       -- tp3 : Term := [co, append([[d,b],[a,c,h]],lli), mt.vec2]
-      -- same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[a,c,b]],lli), mt.vec2]]
+      -- exprEq?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[d,h],[a,c,b]],lli), mt.vec2]]
 
       -- tp1 : Term := [co, append([[h,a],[d,c,b]],lli), mt.vec2]
       -- tp2 : Term := [co, append([[h,c],[a,d,b]],lli), mt.vec2]
       -- tp3 : Term := [co, append([[h,b],[a,c,d]],lli), mt.vec2]
-      -- same?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[h,d],[a,c,b]],lli), mt.vec2]]
+      -- exprEq?([tp1,tp2,tp3], distribute(mt)) => [[co, append([[h,d],[a,c,b]],lli), mt.vec2]]
 
       -- Otherwise just distribute it
       distribute(mt)
@@ -1310,7 +1301,9 @@ VectorAlgebra(R : Field) : VectorAlgebraCategory(R) == Implementation where
     -- Simplification routines
 
     simplify(x:%) : % ==
-      xx := normalForm(rep x)
+      -- TODO: Apply rules
+      xx := rep x
+      xx := normalForm(xx)
       xx := combineTerms(xx)
       xx := removeZeros(xx)
       per xx

@@ -115,7 +115,7 @@ VectorAlgebraCategory(R : Field) : Category == VectorSpaceCategory(R) with
 ++ by Songxin Liang and David J. Jeffrey
 VectorAlgebra(R : Field) : Exports == Implementation where
 
-  Exports == VectorAlgebraCategory(R) with
+  Exports ==> VectorAlgebraCategory(R) with
 
     normalize: % -> %
       ++ Bring the vector expression into a normal form
@@ -138,7 +138,7 @@ VectorAlgebra(R : Field) : Exports == Implementation where
       ++ Helper function.
       -- TODO: Remove
 
-  Implementation == add
+  Implementation ==> add
 
     import Set(List String)
     import Set(String)

@@ -10,86 +10,114 @@
 ++ Proceedings of the International Symposium on Symbolic and Algebraic Computation, 1994, Pages 175-180
 ++ http://dl.acm.org/citation.cfm?doid=190347.190413
 Dispersion(R) : Exports == Implementation where
+--Dispersion(R : CommutativeRing, UP : UnivariatePolynomialCategory R) : Exports == Implementation where
   --R : Ring -- Just an arbitrary commutative ring
-  --R : Join(UniqueFactorizationDomain, CharacteristicZero) -- we need to factor on R[x]
-  R : Join(Field, CharacteristicZero)
-  --R : Join(UniqueFactorizationDomain,PolynomialFactorizationExplicit)  -- we need to factor on R[x]
+  --R : Join(UniqueFactorizationDomain, CharacteristicZero)
+  R : Join(EuclideanDomain, CharacteristicZero, RetractableTo Integer, LinearlyExplicitRingOver Integer)
 
-  --UP : PolynomialCategory
-  --OV : OrderedSet
-  --E : OrderedAbelianMonoidSup
-  --P : PolynomialCategory(R, E, OV)
-
+  NNI ==> NonNegativeInteger
   Z ==> Integer
   QR ==> Fraction(R)
-  SR ==> Set(Z)
-  --P ==> Polynomial R
-  --P ==> UnivariatePolynomialCategory(R)
-  UP ==> SparseUnivariatePolynomial(R)
-  --UP ==> SparseUnivariatePolynomial(R)
-  --UP ==> UnivariatePolynomial R
-  --UP ==> Join(UPx, PolynomialFactorizationExplicit)
+  --OSZ ==> Set(OrderedCompletion(Z))
+
+  --P ==> Polynomial(R)
+  UP ==> SparseUnivariatePolynomial(P)
+
+  -- We need to factor over R[x]
+  S ==> Symbol
+  P ==> Polynomial(R)
+  MVF ==> MultivariateFactorize(S, IndexedExponents S, R, P)
+
 
 
   Exports ==> with
 
-    dispersion : UP -> Z
+    shift : (P, Z) -> P
       ++
 
-    dispersion : (UP, UP) -> Z
+    dispersion : P -> Z
       ++
 
-    dispersionSet : UP -> Set(Z)
+    dispersion : (P, P) -> Z
       ++
 
-    dispersionSet: (UP, UP) -> Set(Z)
+    --dispersionSet : P -> OrderedSet(Z)
+      ++
+
+    --dispersionSet: (P, P) -> OrderedSet(Z)
       ++
 
 
   Implementation ==> add
 
-    FUP ==> Factored(UP)
-    import from FUP
+
+    shift(p:P, n:Z) : P ==
+      x := first variables p
+      eval(p, x, x::P+n::P)
 
 
-    --fUnion ==> Union("nil", "sqfr", "irred", "prime")
-    --FFE    ==> Record(flg : fUnion, fctr : UP, xpnt : Z)
-
-
-    dispersion(p:UP) : Z ==
-      dispersion(p, p)
-
-    dispersion(p:UP, q:UP) : Z ==
+    innerDispersion(p:UP, q:UP, s:Symbol) : Z ==
       degp := degree(p)
       degq := degree(q)
       -- Dispersion for constant polynomials is always zero
       degp < 1 => 0
       degq < 1 => 0
-      --
+      -- Factor polynomials over R
+      fp := factors factor(p)$MVF
+      fq := factors factor(q)$MVF
       dis : Z := 0
-      --fp : UP := 0::UP
-      --u := factor(p)$FUP
+      for pi in fp repeat
+        for qi in fq repeat
+          fpi := pi.factor
+          fqi := qi.factor
+          -- Degree check
+          dpi := degree(fpi)
+          dqi := degree(fqi)
+          (dpi ~= dqi) => "iterate"
 
-      --fp : List FFE := factorList(factor(p)$UP)
+          an := leadingCoefficient(fpi)
+          bm := leadingCoefficient(fqi)
+          (an ~= bm) => "iterate"
 
-      --for fpi in factorList(factor p) repeat
-      --  print(fpi::OutputForm)
+          an1 := coefficient(fpi, (dpi-1)::NNI)
+          bm1 := coefficient(fqi, (dqi-1)::NNI)
 
-      -- for pi in p
-      --   for qi in q
-      --     dpi := degree(pi)
-      --     dqi := degree(qi)
-      --     dpi ~= pqi => "iterate"
-      --     an := leadingCoefficient(pi)
-      --     bn := leadingCoefficient(qi)
-      --     an ~= bn => "iterate"
-      --     anm1 := coefficient(pi, dpi-1)
-      --     bnm1 := coefficient(qi, dqi-1)
-      --     alpha : QR := (bnm1 - anm1) / (dpi * an)
-      --     retractIfCan(3/2)@Union(INT, "failed") case "failed" ==> "iterate"
-      --     alpha <= dis => "iterate"
-      --     dpi > 1 and pi(x+alpha) ~= qi(x) => "iterate"
-      --     dis := alpha
+          alpha : QR := retract(bm1 - an1)@R / retract(dpi*an)@R
+          --retractIfCan(alpha)@Union(R,"failed") case "failed" ==> "iterate"
+          -- We know alpha is not a true quotient
+          --a := retract(numer(alpha))@Z
+          retractIfCan(alpha)@Union(Z,"failed") case "failed" ==> "iterate"
+          a := retract(alpha)@Z
 
+          print(a::OutputForm)
+
+          (a <= dis) => "iterate"
+
+          pim := multivariate(fpi, s)
+          qim := multivariate(fqi, s)
+          (dpi > 1) and (shift(pim, a) ~= qim) => "iterate"
+
+          dis := a
 
       dis
+
+
+    dispersion(p:P) : Z ==
+      v := variables(p)
+      -- What to do if polynomial is multivariate?
+      --#v ~= 1 => "failed"
+      x := first v
+      pu := univariate(p, x)
+      innerDispersion(pu, pu, x)
+
+
+    dispersion(p:P, q:P) : Z ==
+      vp := variables(p)
+      vq := variables(q)
+      -- What to do if polynomials are multivariate?
+      --#vp ~= 1 or #vq ~= 1 => "failed"
+      --first vp ~= first vq => "failed"
+      x := first vp
+      pu := univariate(p, x)
+      qu := univariate(q, x)
+      innerDispersion(pu, qu, x)

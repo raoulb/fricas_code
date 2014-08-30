@@ -1,7 +1,7 @@
 )abbrev package DISPERS Dispersion
 ++ Author: Raoul Bourquin
 ++ Date Created: 30 August 2014
-++ Date Last Updated: 30 August 2014
+++ Date Last Updated: 31 August 2014
 ++ Description:
 ++ Compute the dispersion of polynomials.
 ++ References:
@@ -11,7 +11,7 @@
 ++ http://dl.acm.org/citation.cfm?doid=190347.190413
 Dispersion(R) : Exports == Implementation where
 --Dispersion(R : CommutativeRing, UP : UnivariatePolynomialCategory R) : Exports == Implementation where
-  -- Just an arbitrary commutative ring
+  -- An arbitrary commutative ring, being an UFD is sufficient for the algorithm.
   --R : Join(UniqueFactorizationDomain, CharacteristicZero, RetractableTo Integer)
   R : Join(EuclideanDomain, CharacteristicZero, RetractableTo Integer)
 
@@ -45,7 +45,7 @@ Dispersion(R) : Exports == Implementation where
     dispersionSet : P -> SZ
       ++
 
-    dispersionSet: (P, P) -> SZ
+    dispersionSet : (P, P) -> SZ
       ++
 
 
@@ -65,6 +65,7 @@ Dispersion(R) : Exports == Implementation where
       -- Factor polynomials over R
       fp := factors factor(p)$MVF
       fq := factors factor(q)$MVF
+      -- TODO: Iterate really over pairs only
       for pi in fp repeat
         for qi in fq repeat
           fpi := pi.factor
@@ -73,11 +74,11 @@ Dispersion(R) : Exports == Implementation where
           dpi := degree(fpi)
           dqi := degree(fqi)
           (dpi ~= dqi) => "iterate"
-
+          -- Coefficient check
           an := leadingCoefficient(fpi)
           bm := leadingCoefficient(fqi)
           (an ~= bm) => "iterate"
-
+          -- Check for integral dispersion
           an1 := coefficient(fpi, (dpi-1)::NNI)
           bm1 := coefficient(fqi, (dqi-1)::NNI)
           alpha : QR := retract(bm1 - an1)@R / retract(dpi*an)@R
@@ -85,15 +86,15 @@ Dispersion(R) : Exports == Implementation where
           -- We know alpha is not a true quotient
           --a := retract(numer(alpha))@Z
           retractIfCan(alpha)@Union(Z,"failed") case "failed" ==> "iterate"
+          -- Check for known value
           a := retract(alpha)@Z
           member?(a, J) => "iterate"
-
+          -- Check for really being a shift
           pim := multivariate(fpi, s)
           qim := multivariate(fqi, s)
           (dpi > 1) and (shift(pim, a) ~= qim) => "iterate"
-
+          -- Found new shift value
           J := insert!(a, J)
-
       J
 
     compatible?(p:P, q:P) : Boolean ==

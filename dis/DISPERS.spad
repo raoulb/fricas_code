@@ -11,7 +11,9 @@
 ++ http://dl.acm.org/citation.cfm?doid=190347.190413
 Dispersion(R) : Exports == Implementation where
   --R : Ring -- Just an arbitrary commutative ring
-  R : UniqueFactorizationDomain -- we need to factor on R[x]
+  --R : Join(UniqueFactorizationDomain, CharacteristicZero) -- we need to factor on R[x]
+  R : Join(Field, CharacteristicZero)
+  --R : Join(UniqueFactorizationDomain,PolynomialFactorizationExplicit)  -- we need to factor on R[x]
 
   --UP : PolynomialCategory
   --OV : OrderedSet
@@ -19,26 +21,75 @@ Dispersion(R) : Exports == Implementation where
   --P : PolynomialCategory(R, E, OV)
 
   Z ==> Integer
-  Q ==> Fraction Z
-  UP ==> Polynomial(R) --UnivariatePolynomial R
+  QR ==> Fraction(R)
+  SR ==> Set(Z)
+  --P ==> Polynomial R
+  --P ==> UnivariatePolynomialCategory(R)
+  UP ==> SparseUnivariatePolynomial(R)
+  --UP ==> SparseUnivariatePolynomial(R)
+  --UP ==> UnivariatePolynomial R
+  --UP ==> Join(UPx, PolynomialFactorizationExplicit)
 
 
   Exports ==> with
 
-    dispersion : UP -> R
+    dispersion : UP -> Z
       ++
 
-    dispersion : (UP, UP) -> R
+    dispersion : (UP, UP) -> Z
       ++
 
-    dispersionSet : UP -> Set(R)
+    dispersionSet : UP -> Set(Z)
       ++
 
-    dispersionSet: (UP, UP) -> Set(R)
+    dispersionSet: (UP, UP) -> Set(Z)
       ++
 
 
   Implementation ==> add
 
-    dispersion(p:UP) : R ==
-      0::R
+    FUP ==> Factored(UP)
+    import from FUP
+
+
+    --fUnion ==> Union("nil", "sqfr", "irred", "prime")
+    --FFE    ==> Record(flg : fUnion, fctr : UP, xpnt : Z)
+
+
+    dispersion(p:UP) : Z ==
+      dispersion(p, p)
+
+    dispersion(p:UP, q:UP) : Z ==
+      degp := degree(p)
+      degq := degree(q)
+      -- Dispersion for constant polynomials is always zero
+      degp < 1 => 0
+      degq < 1 => 0
+      --
+      dis : Z := 0
+      --fp : UP := 0::UP
+      --u := factor(p)$FUP
+
+      --fp : List FFE := factorList(factor(p)$UP)
+
+      --for fpi in factorList(factor p) repeat
+      --  print(fpi::OutputForm)
+
+      -- for pi in p
+      --   for qi in q
+      --     dpi := degree(pi)
+      --     dqi := degree(qi)
+      --     dpi ~= pqi => "iterate"
+      --     an := leadingCoefficient(pi)
+      --     bn := leadingCoefficient(qi)
+      --     an ~= bn => "iterate"
+      --     anm1 := coefficient(pi, dpi-1)
+      --     bnm1 := coefficient(qi, dqi-1)
+      --     alpha : QR := (bnm1 - anm1) / (dpi * an)
+      --     retractIfCan(3/2)@Union(INT, "failed") case "failed" ==> "iterate"
+      --     alpha <= dis => "iterate"
+      --     dpi > 1 and pi(x+alpha) ~= qi(x) => "iterate"
+      --     dis := alpha
+
+
+      dis

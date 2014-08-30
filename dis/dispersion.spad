@@ -11,8 +11,8 @@
 ++ http://dl.acm.org/citation.cfm?doid=190347.190413
 Dispersion(R) : Exports == Implementation where
 --Dispersion(R : CommutativeRing, UP : UnivariatePolynomialCategory R) : Exports == Implementation where
-  --R : Ring -- Just an arbitrary commutative ring
-  --R : Join(UniqueFactorizationDomain, CharacteristicZero)
+  -- Just an arbitrary commutative ring
+  --R : Join(UniqueFactorizationDomain, CharacteristicZero, RetractableTo Integer)
   R : Join(EuclideanDomain, CharacteristicZero, RetractableTo Integer)
 
   NNI ==> NonNegativeInteger

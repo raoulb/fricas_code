@@ -1,0 +1,44 @@
+)abbrev package DISPERS Dispersion
+++ Author: Raoul Bourquin
+++ Date Created: 30 August 2014
+++ Date Last Updated: 30 August 2014
+++ Description:
+++ Compute the dispersion of polynomials.
+++ References:
+++ Yiu-Kwong Man and Francis J. Wright,
+++ 'Fast Polynomial Dispersion Computation and its Application to Indefinite Summation',
+++ Proceedings of the International Symposium on Symbolic and Algebraic Computation, 1994, Pages 175-180
+++ http://dl.acm.org/citation.cfm?doid=190347.190413
+Dispersion(R) : Exports == Implementation where
+  --R : Ring -- Just an arbitrary commutative ring
+  R : UniqueFactorizationDomain -- we need to factor on R[x]
+
+  --UP : PolynomialCategory
+  --OV : OrderedSet
+  --E : OrderedAbelianMonoidSup
+  --P : PolynomialCategory(R, E, OV)
+
+  Z ==> Integer
+  Q ==> Fraction Z
+  UP ==> Polynomial(R) --UnivariatePolynomial R
+
+
+  Exports ==> with
+
+    dispersion : UP -> R
+      ++
+
+    dispersion : (UP, UP) -> R
+      ++
+
+    dispersionSet : UP -> Set(R)
+      ++
+
+    dispersionSet: (UP, UP) -> Set(R)
+      ++
+
+
+  Implementation ==> add
+
+    dispersion(p:UP) : R ==
+      0::R

@@ -13,12 +13,14 @@ Dispersion(R) : Exports == Implementation where
 --Dispersion(R : CommutativeRing, UP : UnivariatePolynomialCategory R) : Exports == Implementation where
   --R : Ring -- Just an arbitrary commutative ring
   --R : Join(UniqueFactorizationDomain, CharacteristicZero)
-  R : Join(EuclideanDomain, CharacteristicZero, RetractableTo Integer, LinearlyExplicitRingOver Integer)
+  R : Join(EuclideanDomain, CharacteristicZero, RetractableTo Integer)
 
   NNI ==> NonNegativeInteger
   Z ==> Integer
   QR ==> Fraction(R)
-  --OSZ ==> Set(OrderedCompletion(Z))
+  SZ ==> Set(Z)
+  --OZ ==> OrderedCompletion(Z)
+  --SOZ ==> Set(OrderedCompletion(Z))
 
   --P ==> Polynomial(R)
   UP ==> SparseUnivariatePolynomial(P)
@@ -27,7 +29,6 @@ Dispersion(R) : Exports == Implementation where
   S ==> Symbol
   P ==> Polynomial(R)
   MVF ==> MultivariateFactorize(S, IndexedExponents S, R, P)
-
 
 
   Exports ==> with
@@ -41,31 +42,29 @@ Dispersion(R) : Exports == Implementation where
     dispersion : (P, P) -> Z
       ++
 
-    --dispersionSet : P -> OrderedSet(Z)
+    dispersionSet : P -> SZ
       ++
 
-    --dispersionSet: (P, P) -> OrderedSet(Z)
+    dispersionSet: (P, P) -> SZ
       ++
 
 
   Implementation ==> add
 
-
     shift(p:P, n:Z) : P ==
       x := first variables p
       eval(p, x, x::P+n::P)
 
-
-    innerDispersion(p:UP, q:UP, s:Symbol) : Z ==
+    innerDispersion(p:UP, q:UP, s:Symbol) : SZ ==
       degp := degree(p)
       degq := degree(q)
+      J : SZ := set [0]
       -- Dispersion for constant polynomials is always zero
-      degp < 1 => 0
-      degq < 1 => 0
+      degp < 1 => J
+      degq < 1 => J
       -- Factor polynomials over R
       fp := factors factor(p)$MVF
       fq := factors factor(q)$MVF
-      dis : Z := 0
       for pi in fp repeat
         for qi in fq repeat
           fpi := pi.factor
@@ -81,43 +80,40 @@ Dispersion(R) : Exports == Implementation where
 
           an1 := coefficient(fpi, (dpi-1)::NNI)
           bm1 := coefficient(fqi, (dqi-1)::NNI)
-
           alpha : QR := retract(bm1 - an1)@R / retract(dpi*an)@R
           --retractIfCan(alpha)@Union(R,"failed") case "failed" ==> "iterate"
           -- We know alpha is not a true quotient
           --a := retract(numer(alpha))@Z
           retractIfCan(alpha)@Union(Z,"failed") case "failed" ==> "iterate"
           a := retract(alpha)@Z
-
-          print(a::OutputForm)
-
-          (a <= dis) => "iterate"
+          member?(a, J) => "iterate"
 
           pim := multivariate(fpi, s)
           qim := multivariate(fqi, s)
           (dpi > 1) and (shift(pim, a) ~= qim) => "iterate"
 
-          dis := a
+          J := insert!(a, J)
 
-      dis
+      J
 
-
-    dispersion(p:P) : Z ==
-      v := variables(p)
-      -- What to do if polynomial is multivariate?
-      --#v ~= 1 => "failed"
-      x := first v
-      pu := univariate(p, x)
-      innerDispersion(pu, pu, x)
-
-
-    dispersion(p:P, q:P) : Z ==
+    compatible?(p:P, q:P) : Boolean ==
       vp := variables(p)
       vq := variables(q)
-      -- What to do if polynomials are multivariate?
-      --#vp ~= 1 or #vq ~= 1 => "failed"
-      --first vp ~= first vq => "failed"
-      x := first vp
+      #vp ~= 1 or #vq ~= 1 => false
+      (vp = vq) @ Boolean
+
+    dispersionSet(p:P, q:P) : SZ ==
+      --~compatible?(p, q) => "failed"
+      x := first variables p
       pu := univariate(p, x)
       qu := univariate(q, x)
       innerDispersion(pu, qu, x)
+
+    dispersionSet(p:P) : SZ ==
+      dispersionSet(p, p)
+
+    dispersion(p:P, q:P) : Z ==
+      max dispersionSet(p, q)
+
+    dispersion(p:P) : Z ==
+      dispersion(p, p)

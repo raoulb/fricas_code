@@ -1,0 +1,98 @@
+Z := Integer
+Q := Fraction(Z)
+A := AlgebraicNumber
+P := Polynomial(Q)
+PA := Polynomial(A)
+
+--p1:P := 0
+--dispersionSet(p1)
+-- [0]
+
+--p2:P := 2
+--dispersionSet(p2)
+-- [0]
+
+p3:P := x + 1
+dispersionSet(p3)
+-- [0]
+dispersion(p3)
+-- 0
+
+p4:P := (x + 1)*(x + 2)
+dispersionSet(p4)
+-- [0, 1]
+dispersion(p4)
+-- 1
+
+p5:P := x*(x + 3)
+dispersionSet(p5)
+-- [0, 3]
+dispersion(p5)
+-- 3
+
+p6:P := (x - 3)*(x + 3)
+dispersionSet(p6)
+-- [0, 6]
+dispersion(p6)
+-- 6
+
+p7:P := x^4 - 3*x^2 + 1
+q7 := shift(p7, -3)$Dispersion(Q)
+
+dispersionSet(p7, q7)
+-- [2, 3, 4]
+dispersion(p7, q7)
+-- 4
+dispersionSet(q7, p7)
+-- []
+dispersion(q7, p7)
+-- -oo
+
+p8:P := x*(3*x^2+a)*(x-2536)*(x^3+a)
+q8:P := shift(p8, -345)$Dispersion(Q)
+dispersionSet(p8, q8)
+-- [345, 2881]
+dispersionSet(q8, p8)
+-- [2191]
+
+p9:P := (x-2)^2*(x-3)^3*(x-5)^3
+dispersionSet(p9)
+-- [0, 1, 2, 3]
+dispersionSet(p9, (p9+4)^2)
+-- [1, 2]
+
+p10:P := x*(x+2)*(x-1)
+dispersionSet(p10)
+-- [0, 1, 2, 3]
+
+p11:PA := x^2 + sqrt(5)*x - 1
+q11:PA := x^2 + (2 + sqrt(5))*x + sqrt(5)
+dispersionSet(p11,q11)
+-- [2]
+dispersionSet(q11, p11)
+-- [1, 4]
+
+-- There are some difficulties if we compute over Z[a]
+-- and alpha happenes to lie in Z[a] instead of simply Z.
+-- Hence we can not decide if alpha is indeed integral
+-- in general.
+
+--p12:P := 4*x^4 + (4*a + 8)*x^3 + (a^2 + 6*a + 4)*x^2 + (a^2 + 2*a)*x
+--dispersionSet(p12)
+-- [0, 1]
+
+-- For any specific value of a, the dispersion is 3*a
+-- but the algorithm can not find this in general.
+-- This is the point where the resultant based Ansatz
+-- is superior to the current one.
+
+p13:P := a^2*x^3 + (a^3 + a^2 + a + 1)*x
+--q13:P := shift(p8, -3*a)$Dispersion(Q)
+q13:P := a^2*x^3 - 9*a^3*x^2 + (27*a^4 + a^3 + a^2 + a + 1)*x - 27*a^5 - 3*a^4 - 3*a^3 - 3*a^2 - 3*a
+--dispersionSet(p13, q13)
+-- []
+
+p14:P := eval(p13, a=2)
+q14:P := eval(q13, a=2)
+dispersionSet(p14, q14)
+-- [6]

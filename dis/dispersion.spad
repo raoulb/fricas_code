@@ -11,23 +11,14 @@
 ++ http://dl.acm.org/citation.cfm?doid=190347.190413
 Dispersion(R) : Exports == Implementation where
 --Dispersion(R : CommutativeRing, UP : UnivariatePolynomialCategory R) : Exports == Implementation where
+--Dispersion(R, Polynomial(R)) : Exports == Implementation where
   -- An arbitrary commutative ring, being an UFD is sufficient for the algorithm.
   --R : Join(UniqueFactorizationDomain, CharacteristicZero, RetractableTo Integer)
   R : Join(EuclideanDomain, CharacteristicZero, RetractableTo Integer)
 
-  NNI ==> NonNegativeInteger
-  Z ==> Integer
-  QR ==> Fraction(R)
-  SZ ==> Set(Z)
-
-  --P ==> Polynomial(R)
-  UP ==> SparseUnivariatePolynomial(P)
-
-  -- We need to factor over R[x]
-  S ==> Symbol
   P ==> Polynomial(R)
-  MVF ==> MultivariateFactorize(S, IndexedExponents S, R, P)
-
+  Z ==> Integer
+  SZ ==> Set(Z)
 
   Exports ==> with
 
@@ -49,11 +40,18 @@ Dispersion(R) : Exports == Implementation where
 
   Implementation ==> add
 
+    NNI ==> NonNegativeInteger
+    QR ==> Fraction(R)
+    UP ==> SparseUnivariatePolynomial(P)
+    S ==> Symbol
+    -- We need to factor in R[x]
+    MVF ==> MultivariateFactorize(S, IndexedExponents S, R, P)
+
     shift(p:P, n:Z) : P ==
       x := first variables p
       eval(p, x, x::P+n::P)
 
-    innerDispersion(p:UP, q:UP, s:Symbol) : SZ ==
+    innerDispersion(p:UP, q:UP, s:S) : SZ ==
       degp := degree(p)
       degq := degree(q)
       J : SZ := set [0]

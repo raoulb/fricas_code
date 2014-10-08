@@ -1,0 +1,37 @@
+)abbrev package POLYSHI PolynomialShift
+++ Author: Raoul Bourquin
+++ Date Created: 8 October 2014
+++ Date Last Updated: 9 October 2014
+++ Description:
+++
+++ References:
+PolynomialShift(R) : Exports == Implementation where
+  R : Join(EuclideanDomain, CharacteristicZero, RetractableTo Integer)
+
+  Z ==> Integer
+  P ==> Polynomial(R)
+
+
+  Exports ==> with
+
+    shift : P -> P
+      ++ Compute shift operator \sigma applied to polynomial p
+      ++ i.e. \sigma p(x) = p(x+1).
+
+    shift : (P, Z) -> P
+      ++ Compute shift operator \sigma applied n times to
+      ++ polynomial p, i.e. \sigma^n p(x) = p(x+n).
+
+
+  Implementation ==> add
+
+    -- TODO: Either work explicitely with univariate
+    --       polynomials or take symbol as input
+
+    shift(p:P) : P ==
+      x := first variables p
+      eval(p, x, x::P+1)
+
+    shift(p:P, n:Z) : P ==
+      x := first variables p
+      eval(p, x, x::P+n::P)

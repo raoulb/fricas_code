@@ -1,0 +1,38 @@
+)abbrev package FRACLI FractionalLifting
+++ Author: Raoul Bourquin
+++ Date Created: 8 October 2014
+++ Date Last Updated: 9 October 2014
+++ Description:
+++
+++ References:
+FractionalLifting(R) : Exports == Implementation where
+  R : Join(EuclideanDomain, CharacteristicZero, RetractableTo Integer)
+
+  Z ==> Integer
+  P ==> Polynomial(R)
+  Q ==> Fraction(P)
+  D ==> Dispersion(R)
+
+
+  Exports ==> with
+
+    degree : (Q, Symbol) -> Z
+      ++ Degree of rational functions
+
+    dispersion : Q -> Union(Z, "failed")
+      ++ Dispersion of rational functions
+
+
+  Implementation ==> add
+
+    degree(q:Q, x:Symbol) : Z ==
+      dnum : Z := degree(numer(q)$Q, x)
+      dden : Z := degree(denom(q)$Q, x)
+      dnum - dden
+
+    dispersion(q:Q) : Union(Z, "failed") ==
+      num : P := numer(q)$Q
+      den : P := denom(q)$Q
+      -- TODO: Recheck representation in FRAC is reduced
+      gcd(num, den) ~= 1 => "failed"
+      dispersion(den)$D

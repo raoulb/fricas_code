@@ -1,7 +1,7 @@
 )abbrev package DISPERS Dispersion
 ++ Author: Raoul Bourquin
 ++ Date Created: 30 August 2014
-++ Date Last Updated: 31 August 2014
+++ Date Last Updated: 9 October 2014
 ++ Description:
 ++ Compute the dispersion of polynomials.
 ++ References:
@@ -20,10 +20,8 @@ Dispersion(R) : Exports == Implementation where
   Z ==> Integer
   SZ ==> Set(Z)
 
-  Exports ==> with
 
-    shift : (P, Z) -> P
-      ++
+  Exports ==> with
 
     dispersion : P -> Z
       ++
@@ -46,10 +44,7 @@ Dispersion(R) : Exports == Implementation where
     S ==> Symbol
     -- We need to factor in R[x]
     MVF ==> MultivariateFactorize(S, IndexedExponents S, R, P)
-
-    shift(p:P, n:Z) : P ==
-      x := first variables p
-      eval(p, x, x::P+n::P)
+    E ==> PolynomialShift(R)
 
     innerDispersion(p:UP, q:UP, s:S) : SZ ==
       degp := degree(p)
@@ -85,7 +80,7 @@ Dispersion(R) : Exports == Implementation where
           -- Check for really being a shift
           pim := multivariate(fpi, s)
           qim := multivariate(fqi, s)
-          (dpi > 1) and (shift(pim, a) ~= qim) => "iterate"
+          (dpi > 1) and (shift(pim, a)$E ~= qim) => "iterate"
           -- Found new shift value
           J := insert!(a, J)
       J

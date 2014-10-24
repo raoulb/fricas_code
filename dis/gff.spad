@@ -14,6 +14,7 @@ GreatestFactorialFactorisation(R) : Exports == Implementation where
   R : Join(EuclideanDomain, CharacteristicZero, RetractableTo Integer)
 
   P ==> Polynomial(R)
+  S ==> Symbol
 
   Exports ==> with
 
@@ -21,10 +22,20 @@ GreatestFactorialFactorisation(R) : Exports == Implementation where
       ++ Compute the Greatest-Factorial factorisation
       ++ of the given polynomial p.
 
+    parts : (P, P) -> List(P)
+      ++
+
+    part : (P, P) -> P
+      ++
+
+    shiftSaturation : (P, S) -> List(P)
+      ++ Compute the shift saturation of a polynomial in K[x]
+
   Implementation ==> add
 
-    S ==> Symbol
     E ==> PolynomialShift(R)
+    D ==> Dispersion(R)
+    Z ==> Integer
 
     innerGFF(p:P, x:S) : List(P) ==
       -- Algorithm 1.3, page 29
@@ -52,3 +63,55 @@ GreatestFactorialFactorisation(R) : Exports == Implementation where
     gff(p:P) : List(P) ==
       x : S := first variables p
       innerGFF(p, x)
+
+
+    parts(p:P, q:P) : List(P) ==
+      qi : P := q
+      parts : List(P) := []
+
+      vi := gcd(p, qi)
+      qi := (qi exquo vi)::P
+      parts := cons(vi, parts)
+
+      while not (vi = 1)@Boolean repeat
+        vi := gcd(p, qi)
+        qi := (qi exquo vi)::P
+        parts := cons(vi, parts)
+
+      parts
+
+
+    part(p:P, q:P) : P ==
+      qi : P := q
+      part : P := 1
+
+      vi := gcd(p, qi)
+      qi := (qi exquo vi)::P
+      part := part * vi
+
+      while not (vi = 1)@Boolean repeat
+        vi := gcd(p, qi)
+        qi := (qi exquo vi)::P
+        part := part * vi
+
+      part
+
+
+    NNI ==> NonNegativeInteger
+
+    shiftSaturation(p:P, x:S) : List(P) ==
+      -- Algorithm 1.4
+      safa : List(P) := []
+      d := dispersion(p)$D
+      for k in (d+1)..1 by -1 repeat
+        ps := shift(p, x, k-1)$E
+        q : P := gcd(p, ps)
+        for i in k..1 by -1 repeat
+          pt : P := part(q, p)
+          q := shift(pt, x, -1)$E
+        qk : P := shift(q, x, k)$E
+        qkk : P := fallingFactorial(qk, x, qcoerce(k)@NNI)
+        px : P := part(qkk, p)
+        p := (p exquo px)::P
+        safa := cons(qk, safa)
+      safa

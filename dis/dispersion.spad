@@ -73,7 +73,7 @@ Dispersion(R) : Exports == Implementation where
           an1 := coefficient(fpi, (dpi-1)::NNI)
           bn1 := coefficient(fqi, (dqi-1)::NNI)
           alpha : QR := retract(bn1 - an1)@R / retract(dpi*an)@R
-          retractIfCan(alpha)@Union(R,"failed") case "failed" ==> "iterate"
+          retractIfCan(alpha)@Union(R,"failed") case "failed" => "iterate"
           -- Check for known dispersion value
           a := retract(alpha)@Z
           member?(a, J) => "iterate"

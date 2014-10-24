@@ -1,16 +1,17 @@
 )abbrev package POLYSHI PolynomialShift
 ++ Author: Raoul Bourquin
 ++ Date Created: 8 October 2014
-++ Date Last Updated: 9 October 2014
+++ Date Last Updated: 24 October 2014
 ++ Description:
-++
+++ Shift operators for polynomials
 ++ References:
 PolynomialShift(R) : Exports == Implementation where
   R : Join(EuclideanDomain, CharacteristicZero, RetractableTo Integer)
 
   Z ==> Integer
+  NNI ==> NonNegativeInteger
   P ==> Polynomial(R)
-
+  S ==> Symbol
 
   Exports ==> with
 
@@ -22,11 +23,23 @@ PolynomialShift(R) : Exports == Implementation where
       ++ Compute shift operator \sigma applied n times to
       ++ polynomial p, i.e. \sigma^n p(x) = p(x+n).
 
+    shift : (P, S, Z) -> P
+      ++ Compute shift operator \sigma applied n times to
+      ++ polynomial p, i.e. \sigma^n p(x) = p(x+n).
+
+    fallingFactorial : (P, S, NNI) -> P
+      ++ Computes the falling factorial for polynomials
+      ++ defined as:
+      ++   [p(x)]^k := \prod:{i=0}^{k-1} E^{-i} p(x)
+      ++ where E is the shift operator:
+      ++   E p(x) = p(x+1)
 
   Implementation ==> add
 
     -- TODO: Either work explicitely with univariate
     --       polynomials or take symbol as input
+
+    E ==> PolynomialShift(R)
 
     shift(p:P) : P ==
       x := first variables p
@@ -35,3 +48,13 @@ PolynomialShift(R) : Exports == Implementation where
     shift(p:P, n:Z) : P ==
       x := first variables p
       eval(p, x, x::P+n::P)
+
+    shift(p:P, x:S, n:Z) : P ==
+      eval(p, x, x::P+n::P)
+
+    fallingFactorial(p:P, x:S, k:NNI) : P ==
+      q : P := 1
+      for i in 0..(k-1) repeat
+        qi : P := shift(p, x, -i)$E
+        q := q * qi
+      q

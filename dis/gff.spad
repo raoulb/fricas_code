@@ -1,0 +1,54 @@
+)abbrev package GFF GreatestFactorialFactorisation
+++ Author: Raoul Bourquin
+++ Date Created: 24 October 2014
+++ Date Last Updated: 24 October 2014
+++ Description:
+++ This package implements the Greatest-Factorial factorisation
+++ algorithm for univariate polynomials.
+++ References:
+++ 'Greatest-Factorial Factorisation and Symbolic Summation'
+++ Peter Paule, J. Symb. Comp. 11 (1996)
+++ 'Algorithmen zur Summation rationaler Funktionen'
+++ R. Pirastu, 1992
+GreatestFactorialFactorisation(R) : Exports == Implementation where
+  R : Join(EuclideanDomain, CharacteristicZero, RetractableTo Integer)
+
+  P ==> Polynomial(R)
+
+  Exports ==> with
+
+    gff : P -> List(P)
+      ++ Compute the Greatest-Factorial factorisation
+      ++ of the given polynomial p.
+
+  Implementation ==> add
+
+    S ==> Symbol
+    E ==> PolynomialShift(R)
+
+    innerGFF(p:P, x:S) : List(P) ==
+      -- Algorithm 1.3, page 29
+      factors : List(P) := []
+
+      i := 1
+      g := gcd(p, shift(p, x, 1)$E)
+      gs := shift(g, x, -1)$E
+      pr := (p exquo gs)::P
+      pi := gcd((p exquo g)::P, pr)
+      factors := cons(pi, factors)
+
+      while not (g = 1)@Boolean repeat
+        i := i + 1
+        p := g
+        pr := (pr exquo pi)::P
+        g := (p exquo pr)::P
+        g := shift(g, x, 1)$E
+        pi := gcd((p exquo g)::P, pr)
+        factors := cons(pi, factors)
+
+      reverse factors
+
+
+    gff(p:P) : List(P) ==
+      x : S := first variables p
+      innerGFF(p, x)
